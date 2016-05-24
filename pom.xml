@@ -8,7 +8,6 @@
     <packaging>jar</packaging>
     <version>2.2</version>
     <name>MQTT Broker based on Vert.x</name>
-    <url>http://githib.com/giovibal</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
