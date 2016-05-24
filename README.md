@@ -25,12 +25,6 @@ run as normal java ...
 java -jar target/vertx-mqtt-broker-<version>-fat.jar -c config.json
 ```
 
-cluster ...
-```
-vertx run maven:io.github.giovibal.mqtt:vertx-mqtt-broker-mod:2.2-SNAPSHOT::mqtt-broker -conf config.json -cluster -cluster-host <IP>
-vertx run io.github.giovibal.mqtt.MQTTBroker -cp target/vertx-mqtt-broker-mod-2.2-SNAPSHOT-fat.jar -conf config1.json -cluster -cluster-host <IP>
-```
-
 Features
 ----
 * Suport both QoS 0, 1 and 2 messages
