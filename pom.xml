@@ -6,7 +6,7 @@
     <groupId>io.github.giovibal.mqtt</groupId>
     <artifactId>vertx-mqtt-broker</artifactId>
     <packaging>jar</packaging>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.2</version>
     <name>MQTT Broker based on Vert.x</name>
     <url>http://githib.com/giovibal</url>
 
