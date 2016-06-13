@@ -35,7 +35,6 @@ REM SHIFT
 :endparse
 GOTO eof
 
-REM command ==> java -cp target\vertx-mqtt-broker-mod-2.0-SNAPSHOT-fat.jar io.vertx.core.Starter run io.github.giovibal.mqtt.MQTTBroker -conf config.json -instances 1
 :install
 prunsrv_64bit.exe //IS/%NAME% ^
     --DisplayName="MQTT Broker" ^
@@ -44,11 +43,11 @@ prunsrv_64bit.exe //IS/%NAME% ^
     --LogPath=%DIR%log ^
     --StartMode=jvm ^
     --Classpath=%DIR%\%JAR_FILE% ^
-    --StartClass=io.vertx.core.Starter ^
-    --StartParams=run;io.github.giovibal.mqtt.MQTTBroker;-conf;%DIR%config.json;-instances;1 ^
+    --StartClass=io.github.giovibal.mqtt.Main ^
+    --StartParams=run;io.github.giovibal.mqtt.MQTTBroker;-c;%DIR%config.json ^
     --Startup=manual ^
     --StopMode=jvm ^
-    --StopClass=io.github.giovibal.mqtt.MQTTBroker ^
+    --StopClass=io.github.giovibal.mqtt.Main ^
     --StopMethod=stop ^
     --StdOutput=auto ^
     --StdError=auto ^
