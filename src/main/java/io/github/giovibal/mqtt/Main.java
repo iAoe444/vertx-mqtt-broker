@@ -2,11 +2,12 @@ package io.github.giovibal.mqtt;
 
 import com.hazelcast.config.*;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Launcher;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.cli.*;
-import io.vertx.core.json.Json;
+import io.vertx.core.cli.CLI;
+import io.vertx.core.cli.CLIException;
+import io.vertx.core.cli.CommandLine;
+import io.vertx.core.cli.Option;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -21,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by giova_000 on 13/11/2015.
+ * Created by Giovanni Baleani on 13/11/2015.
  */
 public class Main {
 
