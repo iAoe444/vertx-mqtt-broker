@@ -32,7 +32,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
 
         JsonObject conf = config();
 
-        remoteBridgeHost = conf.getString("remote_bridge_host", "iot.eimware.it");
+        remoteBridgeHost = conf.getString("remote_bridge_host", "localhost");
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
