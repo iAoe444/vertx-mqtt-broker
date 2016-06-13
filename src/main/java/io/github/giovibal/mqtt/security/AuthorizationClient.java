@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt.security;
 
-import io.github.giovibal.mqtt.Container;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
