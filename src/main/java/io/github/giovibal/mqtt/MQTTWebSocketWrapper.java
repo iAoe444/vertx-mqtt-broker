@@ -10,7 +10,7 @@ import io.vertx.core.net.NetSocket;
 import org.dna.mqtt.moquette.proto.messages.AbstractMessage;
 
 /**
- * Created by giova_000 on 29/06/2015.
+ * Created by Giovanni Baleani on 29/06/2015.
  */
 public class MQTTWebSocketWrapper extends WebSocketWrapper {
 
