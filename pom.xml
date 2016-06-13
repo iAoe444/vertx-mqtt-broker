@@ -48,6 +48,12 @@
             <version>${vertx.version}</version>
             <scope>${vertx.scope}</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>${vertx.scope}</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.wso2.carbon.commons</groupId>

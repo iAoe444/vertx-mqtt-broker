@@ -1,1 +1,1 @@
-java -jar ${artifactId}-${version}-fat.jar -conf config.json
+java -jar ${artifactId}-${version}-fat.jar -c config.json

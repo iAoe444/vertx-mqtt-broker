@@ -6,6 +6,7 @@ import io.github.giovibal.mqtt.security.CertInfo;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -35,12 +36,15 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
+        int idelTimeout = conf.getInteger("socket_idle_timeout", 30);
+
 
         // [TCP <- BUS] listen BUS write to TCP
         int timeout = 1000;
         NetClientOptions opt = new NetClientOptions()
                 .setConnectTimeout(timeout) // 60 seconds
                 .setTcpKeepAlive(true)
+                .setIdleTimeout(idelTimeout)
             ;
 
         String ssl_cert_key = conf.getString("ssl_cert_key");
@@ -76,25 +80,30 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
     @Override
     public void handle(AsyncResult<NetSocket> netSocketAsyncResult) {
         if (netSocketAsyncResult.succeeded()) {
-            connected = true;
-            logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "]");
             NetSocket netSocket = netSocketAsyncResult.result();
+            final EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
+            connected = true;
+            logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "] " + netSocket.writeHandlerID());
             netSocket.closeHandler(aVoid -> {
-                logger.error("Bridge Client - closed connection from server [" + remoteBridgeHost + ":" + remoteBridgePort + "]" + netSocket.writeHandlerID());
+                logger.info("Bridge Client - closed connection from server [" + remoteBridgeHost + ":" + remoteBridgePort + "] " + netSocket.writeHandlerID());
+                ebnb.stop();
                 connected = false;
             });
             netSocket.exceptionHandler(throwable -> {
                 logger.error("Bridge Client - Exception: " + throwable.getMessage(), throwable);
+                ebnb.stop();
                 connected = false;
             });
 //            tenant = new CertInfo("C:\\Sviluppo\\Certificati-SSL\\cmroma.it\\cmroma.it.crt").getTenant();
             netSocket.write(tenant + "\n");
             netSocket.write("START SESSION" + "\n");
             netSocket.pause();
-            EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
+
+//            EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
             ebnb.setTenant(tenant);
             ebnb.start();
             logger.info("Bridge Client - bridgeUUID: "+ ebnb.getBridgeUUID());
+
             netSocket.resume();
         } else {
             connected = false;
@@ -107,6 +116,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
             }
         }
     }
+
 
     @Override
     public void stop() throws Exception {

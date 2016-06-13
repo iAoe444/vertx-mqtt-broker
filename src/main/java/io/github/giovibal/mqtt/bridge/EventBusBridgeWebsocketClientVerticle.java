@@ -41,12 +41,14 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
         remoteBridgePath = conf.getString("remote_bridge_path", "/");
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
+        int idleTimeout = conf.getInteger("socket_idle_timeout", 30);
 
         // [WebSocket <- BUS] listen BUS write to WebSocket
         int timeout = 1000;
         HttpClientOptions opt = new HttpClientOptions()
-                .setConnectTimeout(timeout) // 60 seconds
+                .setConnectTimeout(timeout) // (The default value of connect timeout = 60000 ms) we set to 1 second
                 .setTcpKeepAlive(true)
+                .setIdleTimeout(idleTimeout)
                 ;
 
         String ssl_cert_key = conf.getString("ssl_cert_key");
@@ -81,37 +83,28 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
 
     @Override
     public void handle(WebSocket webSocket) {
-//        if (netSocketAsyncResult.succeeded()) {
-            connected = true;
-            logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "]");
-//            WebSocket webSocket = netSocketAsyncResult.result();
-            webSocket.closeHandler(aVoid -> {
-                logger.error("Bridge Client - closed connection from server [" + remoteBridgeHost + ":" + remoteBridgePort + "]" + webSocket.textHandlerID());
-                connected = false;
-            });
-            webSocket.exceptionHandler(throwable -> {
-                logger.error("Bridge Client - Exception: " + throwable.getMessage(), throwable);
-                connected = false;
-            });
+        final EventBusWebsocketBridge ebnb = new EventBusWebsocketBridge(webSocket, vertx.eventBus(), address);
+        connected = true;
+        logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "]");
+        webSocket.closeHandler(aVoid -> {
+            logger.error("Bridge Client - closed connection from server [" + remoteBridgeHost + ":" + remoteBridgePort + "]" + webSocket.textHandlerID());
+            ebnb.stop();
+            connected = false;
+        });
+        webSocket.exceptionHandler(throwable -> {
+            logger.error("Bridge Client - Exception: " + throwable.getMessage(), throwable);
+            ebnb.stop();
+            connected = false;
+        });
 
-            webSocket.write(Buffer.buffer( tenant + "\n" ));
-            webSocket.write(Buffer.buffer( "START SESSION" + "\n" ));
-            webSocket.pause();
-            EventBusWebsocketBridge ebnb = new EventBusWebsocketBridge(webSocket, vertx.eventBus(), address);
-            ebnb.setTenant(tenant);
-            ebnb.start();
-            logger.info("Bridge Client - bridgeUUID: "+ ebnb.getBridgeUUID());
-            webSocket.resume();
-//        } else {
-//            connected = false;
-//            String msg = "Bridge Client - not connected to server [" + remoteBridgeHost + ":" + remoteBridgePort +"]";
-//            Throwable e = netSocketAsyncResult.cause();
-//            if (e != null) {
-//                logger.error(msg, e);
-//            } else {
-//                logger.error(msg);
-//            }
-//        }
+        webSocket.write(Buffer.buffer( tenant + "\n" ));
+        webSocket.write(Buffer.buffer( "START SESSION" + "\n" ));
+        webSocket.pause();
+//        EventBusWebsocketBridge ebnb = new EventBusWebsocketBridge(webSocket, vertx.eventBus(), address);
+        ebnb.setTenant(tenant);
+        ebnb.start();
+        logger.info("Bridge Client - bridgeUUID: "+ ebnb.getBridgeUUID());
+        webSocket.resume();
     }
 
     @Override

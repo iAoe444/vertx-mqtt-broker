@@ -63,10 +63,10 @@ public class CertInfo {
             for (X509Certificate c : certs) {
                 String dn = c.getSubjectDN().getName();// info del DEVICE/TENANT
                 tenant = getTenantFromDN(dn);
-                logger.info("Cert Info - " + c.getSerialNumber() + " " + dn);
+                logger.debug("Cert Info - " + c.getSerialNumber() + " " + dn);
             }
         }
-        logger.info("Cert Info - tenant found: "+ tenant);
+        logger.debug("Cert Info - tenant found: "+ tenant);
         return tenant;
     }
 

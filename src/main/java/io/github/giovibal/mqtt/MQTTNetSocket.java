@@ -25,7 +25,7 @@ public class MQTTNetSocket extends MQTTSocket {
         netSocket.handler(this);
         netSocket.exceptionHandler(event -> {
             String clientInfo = getClientInfo();
-            logger.info(clientInfo + ", net-socket closed ... " + netSocket.writeHandlerID() + " error: " + event.getMessage());
+            logger.error(clientInfo + ", net-socket closed ... " + netSocket.writeHandlerID() + " error: " + event.getMessage(), event.getCause());
             handleWillMessage();
             shutdown();
         });
