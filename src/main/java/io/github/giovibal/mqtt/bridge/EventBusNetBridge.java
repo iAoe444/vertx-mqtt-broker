@@ -57,10 +57,7 @@ public class EventBusNetBridge {
 
         // from local bus to remote tcp
         consumer.handler(bufferMessage -> {
-            boolean isBridged = bufferMessage.headers() != null
-                    && bufferMessage.headers().contains(BR_HEADER)
-                    && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
-                    ;
+            boolean isBridged = isBridged(bufferMessage);
             if (!isBridged) {
                 boolean tenantMatch = tenantMatch(bufferMessage);
                 if(tenantMatch) {
@@ -70,6 +67,16 @@ public class EventBusNetBridge {
         });
         consumer.resume();
         netSocket.resume();
+    }
+
+    private boolean isBridged(Message<Buffer> bufferMessage) {
+        // try to comment uuid check... this is more restrictive policy
+        // but we hope can prevent loop in very rare cases...
+        boolean isBridged = bufferMessage.headers() != null
+                && bufferMessage.headers().contains(BR_HEADER)
+//                    && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
+                ;
+        return isBridged;
     }
 
     // TODO: this method is equal to MQTTSession.isTenantSession, need refactoring

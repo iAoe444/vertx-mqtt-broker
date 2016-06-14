@@ -36,7 +36,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
-        int idelTimeout = conf.getInteger("socket_idle_timeout", 30);
+        int idelTimeout = conf.getInteger("socket_idle_timeout", 120);
 
 
         // [TCP <- BUS] listen BUS write to TCP
@@ -81,9 +81,15 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
     public void handle(AsyncResult<NetSocket> netSocketAsyncResult) {
         if (netSocketAsyncResult.succeeded()) {
             NetSocket netSocket = netSocketAsyncResult.result();
-            final EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
             connected = true;
             logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "] " + netSocket.writeHandlerID());
+
+//            tenant = new CertInfo("C:\\Sviluppo\\Certificati-SSL\\cmroma.it\\cmroma.it.crt").getTenant();
+            netSocket.write(tenant + "\n");
+            netSocket.write("START SESSION" + "\n");
+            netSocket.pause();
+
+            final EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
             netSocket.closeHandler(aVoid -> {
                 logger.info("Bridge Client - closed connection from server [" + remoteBridgeHost + ":" + remoteBridgePort + "] " + netSocket.writeHandlerID());
                 ebnb.stop();
@@ -94,14 +100,11 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
                 ebnb.stop();
                 connected = false;
             });
-//            tenant = new CertInfo("C:\\Sviluppo\\Certificati-SSL\\cmroma.it\\cmroma.it.crt").getTenant();
-            netSocket.write(tenant + "\n");
-            netSocket.write("START SESSION" + "\n");
-            netSocket.pause();
 
 //            EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
             ebnb.setTenant(tenant);
             ebnb.start();
+
             logger.info("Bridge Client - bridgeUUID: "+ ebnb.getBridgeUUID());
 
             netSocket.resume();

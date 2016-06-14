@@ -41,7 +41,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
         remoteBridgePath = conf.getString("remote_bridge_path", "/");
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
-        int idleTimeout = conf.getInteger("socket_idle_timeout", 30);
+        int idleTimeout = conf.getInteger("socket_idle_timeout", 120);
 
         // [WebSocket <- BUS] listen BUS write to WebSocket
         int timeout = 1000;
