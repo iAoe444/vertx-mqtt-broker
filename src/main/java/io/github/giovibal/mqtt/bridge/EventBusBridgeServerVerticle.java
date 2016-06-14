@@ -28,7 +28,7 @@ public class EventBusBridgeServerVerticle extends AbstractVerticle {
 
         String address = MQTTSession.ADDRESS;
         Integer localBridgePort = conf.getInteger("local_bridge_port", 7007);
-        int idleTimeout = conf.getInteger("socket_idle_timeout", 120);
+        int idleTimeout = conf.getInteger("socket_idle_timeout", 30);
 
 
         // [TCP -> BUS] listen TCP publish to BUS

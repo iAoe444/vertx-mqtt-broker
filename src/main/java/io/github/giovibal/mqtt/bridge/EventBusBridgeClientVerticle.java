@@ -36,7 +36,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
-        int idelTimeout = conf.getInteger("socket_idle_timeout", 120);
+        int idelTimeout = conf.getInteger("socket_idle_timeout", 30);
 
 
         // [TCP <- BUS] listen BUS write to TCP
