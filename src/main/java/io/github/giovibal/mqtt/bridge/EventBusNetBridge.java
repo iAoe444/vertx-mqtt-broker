@@ -74,7 +74,7 @@ public class EventBusNetBridge {
         // but we hope can prevent loop in very rare cases...
         boolean isBridged = bufferMessage.headers() != null
                 && bufferMessage.headers().contains(BR_HEADER)
-//                && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
+                && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
                 ;
         return isBridged;
     }

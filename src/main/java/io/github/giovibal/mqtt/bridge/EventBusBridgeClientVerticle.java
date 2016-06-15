@@ -25,6 +25,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
     private String address;
     private long connectionTimerID;
     private boolean connected;
+    private boolean connecting;
     private String tenant;
 
     @Override
@@ -64,21 +65,28 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         }
 
         netClient = vertx.createNetClient(opt);
-        netClient.connect(remoteBridgePort, remoteBridgeHost, this);
+        connect();
         connectionTimerID = vertx.setPeriodic(timeout*2, aLong -> {
             checkConnection();
         });
+    }
+    private void connect() {
+        if(!connecting) {
+            connecting = true;
+            netClient.connect(remoteBridgePort, remoteBridgeHost, this);
+        }
     }
 
     private void checkConnection() {
         if(!connected) {
             logger.info("Bridge Client - try to reconnect to server [" + remoteBridgeHost + ":" + remoteBridgePort + "] ... " + connectionTimerID);
-            netClient.connect(remoteBridgePort, remoteBridgeHost, this);
+            connect();
         }
     }
 
     @Override
     public void handle(AsyncResult<NetSocket> netSocketAsyncResult) {
+        connecting = false;
         if (netSocketAsyncResult.succeeded()) {
             NetSocket netSocket = netSocketAsyncResult.result();
             connected = true;
