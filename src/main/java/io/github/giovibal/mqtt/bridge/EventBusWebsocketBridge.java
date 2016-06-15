@@ -23,8 +23,8 @@ public class EventBusWebsocketBridge {
     private DeliveryOptions deliveryOpt;
     private MessageConsumer<Buffer> consumer;
     private MessageProducer<Buffer> producer;
-//    private MqttPump fromRemoteTcpToLocalBus;
-    private Pump fromRemoteTcpToLocalBus;
+    private MqttPump fromRemoteTcpToLocalBus;
+//    private Pump fromRemoteTcpToLocalBus;
     private WebSocketWrapper netSocketWrapper;
     private String bridgeUUID;
 
@@ -84,9 +84,8 @@ public class EventBusWebsocketBridge {
             boolean containsTenantHeader = message.headers().contains(MQTTSession.TENANT_HEADER);
             if (containsTenantHeader) {
                 String tenantHeaderValue = message.headers().get(MQTTSession.TENANT_HEADER);
-                tenantMatch =
-                        tenant.equals(tenantHeaderValue)
-                                || "".equals(tenantHeaderValue)
+                tenantMatch = tenant.equals(tenantHeaderValue)
+                               || "".equals(tenantHeaderValue)
                 ;
             } else {
                 // if message doesn't contains header is not for a tenant-session

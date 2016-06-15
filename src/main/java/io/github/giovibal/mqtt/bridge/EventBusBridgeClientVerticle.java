@@ -27,6 +27,11 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
     private boolean connected;
     private boolean connecting;
     private String tenant;
+    private int idelTimeout;
+    private String ssl_cert_key;
+    private String ssl_cert;
+    private String ssl_trust;
+    private int connectTimeout = 1000;
 
     @Override
     public void start() throws Exception {
@@ -37,38 +42,39 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
         address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
-        int idelTimeout = conf.getInteger("socket_idle_timeout", 30);
+        idelTimeout = conf.getInteger("socket_idle_timeout", 120);
+        ssl_cert_key = conf.getString("ssl_cert_key");
+        ssl_cert = conf.getString("ssl_cert");
+        ssl_trust = conf.getString("ssl_trust");
 
-
+        createClient();
+        connect();
+        connectionTimerID = vertx.setPeriodic(connectTimeout*2, aLong -> {
+            checkConnection();
+        });
+    }
+    private void createClient() {
         // [TCP <- BUS] listen BUS write to TCP
-        int timeout = 1000;
         NetClientOptions opt = new NetClientOptions()
-                .setConnectTimeout(timeout) // 60 seconds
+                .setConnectTimeout(connectTimeout) // 60 seconds
                 .setTcpKeepAlive(true)
                 .setIdleTimeout(idelTimeout)
-            ;
+                ;
 
-        String ssl_cert_key = conf.getString("ssl_cert_key");
-        String ssl_cert = conf.getString("ssl_cert");
-        String ssl_trust = conf.getString("ssl_trust");
         if(ssl_cert_key != null && ssl_cert != null && ssl_trust != null) {
             opt.setSsl(true)
                     .setPemKeyCertOptions(new PemKeyCertOptions()
-                                    .setKeyPath(ssl_cert_key)
-                                    .setCertPath(ssl_cert)
+                            .setKeyPath(ssl_cert_key)
+                            .setCertPath(ssl_cert)
                     )
                     .setPemTrustOptions(new PemTrustOptions()
-                                    .addCertPath(ssl_trust)
+                            .addCertPath(ssl_trust)
                     )
             ;
             tenant = new CertInfo(ssl_cert).getTenant();
         }
 
         netClient = vertx.createNetClient(opt);
-        connect();
-        connectionTimerID = vertx.setPeriodic(timeout*2, aLong -> {
-            checkConnection();
-        });
     }
     private void connect() {
         if(!connecting) {
