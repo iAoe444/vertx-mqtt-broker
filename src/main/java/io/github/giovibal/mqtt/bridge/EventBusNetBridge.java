@@ -3,9 +3,13 @@ package io.github.giovibal.mqtt.bridge;
 import io.github.giovibal.mqtt.MQTTNetSocketWrapper;
 import io.github.giovibal.mqtt.MQTTSession;
 import io.github.giovibal.mqtt.NetSocketWrapper;
+import io.github.giovibal.mqtt.security.CertInfo;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetSocket;
+import io.vertx.core.parsetools.RecordParser;
 import io.vertx.core.streams.Pump;
 
 import java.util.UUID;
@@ -14,6 +18,8 @@ import java.util.UUID;
  * Created by Giovanni Baleani on 15/07/2015.
  */
 public class EventBusNetBridge {
+
+    private static Logger logger = LoggerFactory.getLogger(EventBusNetBridge.class);
 
     private static final String BR_HEADER = "bridged";
 
@@ -127,5 +133,33 @@ public class EventBusNetBridge {
 
     public String getTenant() {
         return tenant;
+    }
+
+
+    public RecordParser initialHandhakeProtocolParser() {
+        NetSocket sock = netSocket;
+        final RecordParser parser = RecordParser.newDelimited("\n", h -> {
+            String cmd = h.toString();
+            if("START SESSION".equalsIgnoreCase(cmd)) {
+                sock.pause();
+                start();
+                logger.info("Bridge Server - start session with " +
+                        "tenant: " + getTenant() +
+                        ", ip: " + sock.remoteAddress() +
+                        ", bridgeUUID: " + getBridgeUUID()
+                );
+                sock.resume();
+            } else {
+                String tenant = cmd;
+                String tenantFromCert = new CertInfo(sock).getTenant();
+//              if(!tenant.equals(tenantFromCert))
+//                  throw new IllegalAccessError("Bridge Authentication Failed for tenant: "+ tenant +"/"+ tenantFromCert);
+                if(tenantFromCert != null)
+                    tenant = tenantFromCert;
+
+                setTenant(tenant);
+            }
+        });
+        return parser;
     }
 }

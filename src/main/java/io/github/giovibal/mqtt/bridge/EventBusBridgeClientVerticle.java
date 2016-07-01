@@ -1,12 +1,10 @@
 package io.github.giovibal.mqtt.bridge;
 
-import io.github.giovibal.mqtt.Container;
 import io.github.giovibal.mqtt.MQTTSession;
 import io.github.giovibal.mqtt.security.CertInfo;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -19,15 +17,15 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
 
     private static Logger logger = LoggerFactory.getLogger(EventBusBridgeClientVerticle.class);
     
+    private String address;
     private NetClient netClient;
     private String remoteBridgeHost;
     private Integer remoteBridgePort;
-    private String address;
     private long connectionTimerID;
     private boolean connected;
     private boolean connecting;
     private String tenant;
-    private int idelTimeout;
+    private int idleTimeout;
     private String ssl_cert_key;
     private String ssl_cert;
     private String ssl_trust;
@@ -35,14 +33,13 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
 
     @Override
     public void start() throws Exception {
+        address = MQTTSession.ADDRESS;
 
         JsonObject conf = config();
-
         remoteBridgeHost = conf.getString("remote_bridge_host", "iot.eimware.it");
         remoteBridgePort = conf.getInteger("remote_bridge_port", 7007);
-        address = MQTTSession.ADDRESS;
         tenant = conf.getString("remote_bridge_tenant");
-        idelTimeout = conf.getInteger("socket_idle_timeout", 120);
+        idleTimeout = conf.getInteger("socket_idle_timeout", 120);
         ssl_cert_key = conf.getString("ssl_cert_key");
         ssl_cert = conf.getString("ssl_cert");
         ssl_trust = conf.getString("ssl_trust");
@@ -58,7 +55,7 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
         NetClientOptions opt = new NetClientOptions()
                 .setConnectTimeout(connectTimeout) // 60 seconds
                 .setTcpKeepAlive(true)
-                .setIdleTimeout(idelTimeout)
+                .setIdleTimeout(idleTimeout)
                 ;
 
         if(ssl_cert_key != null && ssl_cert != null && ssl_trust != null) {
@@ -98,7 +95,6 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
             connected = true;
             logger.info("Bridge Client - connected to server [" + remoteBridgeHost + ":" + remoteBridgePort + "] " + netSocket.writeHandlerID());
 
-//            tenant = new CertInfo("C:\\Sviluppo\\Certificati-SSL\\cmroma.it\\cmroma.it.crt").getTenant();
             netSocket.write(tenant + "\n");
             netSocket.write("START SESSION" + "\n");
             netSocket.pause();
@@ -114,13 +110,10 @@ public class EventBusBridgeClientVerticle extends AbstractVerticle implements Ha
                 ebnb.stop();
                 connected = false;
             });
-
-//            EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
             ebnb.setTenant(tenant);
             ebnb.start();
 
             logger.info("Bridge Client - bridgeUUID: "+ ebnb.getBridgeUUID());
-
             netSocket.resume();
         } else {
             connected = false;

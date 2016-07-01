@@ -21,8 +21,8 @@ public class EventBusBridgeServerVerticle extends AbstractVerticle {
 
     private static Logger logger = LoggerFactory.getLogger(EventBusBridgeServerVerticle.class);
 
-    private NetServer netServer;
     private String address;
+    private NetServer netServer;
     private int localBridgePort;
     private int idleTimeout;
     private String ssl_cert_key;
@@ -31,11 +31,11 @@ public class EventBusBridgeServerVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
+        address = MQTTSession.ADDRESS;
 
         JsonObject conf = config();
 
         localBridgePort = conf.getInteger("local_bridge_port", 7007);
-        address = MQTTSession.ADDRESS;
         idleTimeout = conf.getInteger("socket_idle_timeout", 120);
         ssl_cert_key = conf.getString("ssl_cert_key");
         ssl_cert = conf.getString("ssl_cert");
@@ -62,40 +62,21 @@ public class EventBusBridgeServerVerticle extends AbstractVerticle {
         }
 
         netServer = vertx.createNetServer(opt);
-        netServer.connectHandler(netSocket -> {
-            final EventBusNetBridge ebnb = new EventBusNetBridge(netSocket, vertx.eventBus(), address);
-            netSocket.closeHandler(aVoid -> {
-                logger.info("Bridge Server - closed connection from client ip: " + netSocket.remoteAddress());
+        netServer.connectHandler(sock -> {
+            final EventBusNetBridge ebnb = new EventBusNetBridge(sock, vertx.eventBus(), address);
+            sock.closeHandler(aVoid -> {
+                logger.info("Bridge Server - closed connection from client ip: " + sock.remoteAddress());
                 ebnb.stop();
             });
-            netSocket.exceptionHandler(throwable -> {
+            sock.exceptionHandler(throwable -> {
                 logger.error("Bridge Server - Exception: " + throwable.getMessage(), throwable);
                 ebnb.stop();
             });
 
-            logger.info("Bridge Server - new connection from client ip: " + netSocket.remoteAddress());
+            logger.info("Bridge Server - new connection from client ip: " + sock.remoteAddress());
 
-
-
-            final RecordParser parser = RecordParser.newDelimited("\n", h -> {
-                String cmd = h.toString();
-                if("START SESSION".equalsIgnoreCase(cmd)) {
-                    netSocket.pause();
-                    ebnb.start();
-                    logger.info("Bridge Server - start session with tenant: " + ebnb.getTenant() +", ip: " + netSocket.remoteAddress() +", bridgeUUID: " + ebnb.getBridgeUUID());
-                    netSocket.resume();
-                } else {
-                    String tenant = cmd;
-                    String tenantFromCert = new CertInfo(netSocket).getTenant();
-//                    if(!tenant.equals(tenantFromCert))
-//                        throw new IllegalAccessError("Bridge Authentication Failed for tenant: "+ tenant +"/"+ tenantFromCert);
-                    if(tenantFromCert != null)
-                        tenant = tenantFromCert;
-
-                    ebnb.setTenant(tenant);
-                }
-            });
-            netSocket.handler(parser::handle);
+            RecordParser parser = ebnb.initialHandhakeProtocolParser();
+            sock.handler(parser::handle);
 
         }).listen();
     }
