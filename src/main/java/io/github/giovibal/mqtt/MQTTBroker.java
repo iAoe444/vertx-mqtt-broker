@@ -66,13 +66,23 @@ public class MQTTBroker extends AbstractVerticle {
     }
 
     private void deployBridgeServerVerticle(JsonObject config, int instances) {
-        Class c = EventBusBridgeServerVerticle.class;
-//        Class c = EventBusBridgeWebsocketServerVerticle.class;
+        Boolean useWebsocket = config.getBoolean("websocket_enabled", false);
+        Class c;
+        if(useWebsocket) {
+            c = EventBusBridgeWebsocketServerVerticle.class;
+        } else {
+            c = EventBusBridgeServerVerticle.class;
+        }
         deployVerticle( c, new DeploymentOptions().setWorker(false).setInstances(instances).setConfig(config) );
     }
     private void deployBridgeClientVerticle(JsonObject config, int instances) {
-        Class c = EventBusBridgeClientVerticle.class;
-//        Class c = EventBusBridgeWebsocketClientVerticle.class;
+        Boolean useWebsocket = config.getBoolean("websocket_enabled", false);
+        Class c;
+        if(useWebsocket) {
+            c = EventBusBridgeWebsocketClientVerticle.class;
+        } else {
+            c = EventBusBridgeClientVerticle.class;
+        }
         deployVerticle( c, new DeploymentOptions().setWorker(false).setInstances(instances).setConfig(config) );
     }
 

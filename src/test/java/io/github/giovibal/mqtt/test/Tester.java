@@ -26,12 +26,12 @@ public class Tester {
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
-        stats("Num Clients / Num Messages Tests");
-        for(int i=0; i<5; i++) {
-            test2(200, 5, 0, 1);
-            Thread.sleep(40*1000);
-        }
-//        test2(100, 30, 0, 1);
+//        stats("Num Clients / Num Messages Tests");
+//        for(int i=0; i<5; i++) {
+//            test2(200, 5, 0, 1);
+//            Thread.sleep(40*1000);
+//        }
+        test2(200, 10, 0, 10000);
 //        test2(3, 1000, 0, 1);
 //        test2(5, 1000, 0, 10);
 //        test2(5, 1000, 0, 1);
@@ -68,6 +68,7 @@ public class Tester {
 //        test4(100, 20);
 //        logEnabled=false;
 //        test4(1000, 200);
+        System.exit(0);
     }
 
     private static void log(String msg) {

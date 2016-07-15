@@ -21,7 +21,6 @@ public class WebSocketWrapper {
         this.webSocket = netSocket;
     }
 
-    // TODO: this method is equals to MQTTWebSocket.sendMessageToClient... need refactoring
     public void sendMessageToClient(Buffer bytes) {
         try {
             webSocket.write(bytes);
@@ -36,6 +35,6 @@ public class WebSocketWrapper {
 
     public void stop() {
         // stop writing to socket
-        webSocket.drainHandler(null);
+//        webSocket.drainHandler(null);
     }
 }

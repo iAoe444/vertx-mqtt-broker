@@ -3,10 +3,14 @@ package io.github.giovibal.mqtt.bridge;
 import io.github.giovibal.mqtt.MQTTSession;
 import io.github.giovibal.mqtt.MQTTWebSocketWrapper;
 import io.github.giovibal.mqtt.WebSocketWrapper;
+import io.github.giovibal.mqtt.security.CertInfo;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.*;
+import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.http.WebSocketBase;
-import io.vertx.core.streams.Pump;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.parsetools.RecordParser;
 
 import java.util.UUID;
 
@@ -14,6 +18,8 @@ import java.util.UUID;
  * Created by Giovanni Baleani on 15/07/2015.
  */
 public class EventBusWebsocketBridge {
+    private static Logger logger = LoggerFactory.getLogger(EventBusWebsocketBridge.class);
+
     private static final String BR_HEADER = "bridged";
 
     private WebSocketBase webSocket;
@@ -23,8 +29,8 @@ public class EventBusWebsocketBridge {
     private DeliveryOptions deliveryOpt;
     private MessageConsumer<Buffer> consumer;
     private MessageProducer<Buffer> producer;
-//    private MqttPump fromRemoteTcpToLocalBus;
-    private Pump fromRemoteTcpToLocalBus;
+    private MqttPump fromRemoteTcpToLocalBus;
+//    private Pump fromRemoteTcpToLocalBus;
     private WebSocketWrapper netSocketWrapper;
     private String bridgeUUID;
 
@@ -84,9 +90,8 @@ public class EventBusWebsocketBridge {
             boolean containsTenantHeader = message.headers().contains(MQTTSession.TENANT_HEADER);
             if (containsTenantHeader) {
                 String tenantHeaderValue = message.headers().get(MQTTSession.TENANT_HEADER);
-                tenantMatch =
-                        tenant.equals(tenantHeaderValue)
-                                || "".equals(tenantHeaderValue)
+                tenantMatch = tenant.equals(tenantHeaderValue)
+                               || "".equals(tenantHeaderValue)
                 ;
             } else {
                 // if message doesn't contains header is not for a tenant-session
@@ -104,10 +109,10 @@ public class EventBusWebsocketBridge {
     }
 
     public void stop() {
-        // from remote tcp to local bus
-        fromRemoteTcpToLocalBus.stop();
-        // from local bus to remote tcp
-        netSocketWrapper.stop();// stop write to remote tcp socket
+//        // from remote tcp to local bus
+//        fromRemoteTcpToLocalBus.stop();
+//        // from local bus to remote tcp
+//        netSocketWrapper.stop();// stop write to remote tcp socket
         consumer.handler(null);// stop read from bus
     }
 
@@ -119,5 +124,36 @@ public class EventBusWebsocketBridge {
 
     public String getTenant() {
         return tenant;
+    }
+
+
+    public RecordParser initialHandhakeProtocolParser() {
+        if(!(webSocket instanceof ServerWebSocket)) {
+            throw new IllegalStateException("This must be a server! websocket instance is of type '"+webSocket.getClass().getSimpleName()+"'");
+        }
+        ServerWebSocket sock = (ServerWebSocket)webSocket;
+        final RecordParser parser = RecordParser.newDelimited("\n", h -> {
+            String cmd = h.toString();
+            if ("START SESSION".equalsIgnoreCase(cmd)) {
+                sock.pause();
+                start();
+                logger.info("Bridge Server - start session with " +
+                        "tenant: " + getTenant() +
+                        ", ip: " + sock.remoteAddress() +
+                        ", bridgeUUID: " + getBridgeUUID()
+                );
+                sock.resume();
+            } else {
+                String tenant = cmd;
+                String tenantFromCert = new CertInfo(sock).getTenant();
+//              if(!tenant.equals(tenantFromCert))
+//                  throw new IllegalAccessError("Bridge Authentication Failed for tenant: "+ tenant +"/"+ tenantFromCert);
+                if (tenantFromCert != null)
+                    tenant = tenantFromCert;
+
+                setTenant(tenant);
+            }
+        });
+        return parser;
     }
 }
