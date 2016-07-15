@@ -11,9 +11,7 @@ import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.net.NetClientOptions;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
+import io.vertx.core.net.*;
 
 /**
  * Created by Giovanni Bleani on 15/07/2015.
@@ -71,13 +69,13 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
 
         if(ssl_cert_key != null && ssl_cert != null && ssl_trust != null) {
             opt.setSsl(true)
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .setKeyPath(ssl_cert_key)
-                            .setCertPath(ssl_cert)
-                    )
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(ssl_trust)
-                    )
+                .setPemKeyCertOptions(new PemKeyCertOptions()
+                    .setKeyPath(ssl_cert_key)
+                    .setCertPath(ssl_cert)
+                )
+                .setPemTrustOptions(new PemTrustOptions()
+                    .addCertPath(ssl_trust)
+                )
             ;
             tenant = new CertInfo(ssl_cert).getTenant();
         }
