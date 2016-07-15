@@ -145,12 +145,12 @@ public class EventBusWebsocketBridge {
                 sock.resume();
             } else {
                 String tenant = cmd;
-                String tenantFromCert = new CertInfo(sock).getTenant();
-//              if(!tenant.equals(tenantFromCert))
-//                  throw new IllegalAccessError("Bridge Authentication Failed for tenant: "+ tenant +"/"+ tenantFromCert);
-                if (tenantFromCert != null)
-                    tenant = tenantFromCert;
-
+//                if (tenant == null || tenant.trim().length()==0) {
+                    String tenantFromCert = new CertInfo(sock).getTenant();
+                    if (tenantFromCert != null) {
+                        tenant = tenantFromCert;
+                    }
+//                }
                 setTenant(tenant);
             }
         });

@@ -48,9 +48,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
         ssl_cert_key = conf.getString("ssl_cert_key");
         ssl_cert = conf.getString("ssl_cert");
         ssl_trust = conf.getString("ssl_trust");
-        ssl_cert_key = conf.getString("ssl_cert_key");
-        ssl_cert = conf.getString("ssl_cert");
-        ssl_trust = conf.getString("ssl_trust");
+
 
         createClient();
         connect();
@@ -77,7 +75,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
                     .addCertPath(ssl_trust)
                 )
             ;
-            tenant = new CertInfo(ssl_cert).getTenant();
+//            tenant = new CertInfo(ssl_cert).getTenant();
         }
 
         netClient = vertx.createHttpClient(opt);
