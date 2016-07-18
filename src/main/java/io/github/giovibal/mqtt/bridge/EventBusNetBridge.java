@@ -152,8 +152,6 @@ public class EventBusNetBridge {
             } else {
                 String tenant = cmd;
                 String tenantFromCert = new CertInfo(sock).getTenant();
-//              if(!tenant.equals(tenantFromCert))
-//                  throw new IllegalAccessError("Bridge Authentication Failed for tenant: "+ tenant +"/"+ tenantFromCert);
                 if(tenantFromCert != null)
                     tenant = tenantFromCert;
 

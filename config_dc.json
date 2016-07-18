@@ -7,7 +7,10 @@
   ],
   "bridge_server": {
     "websocket_enabled": true,
-    "socket_idle_timeout": 10,
-    "local_bridge_port": 7007
+    "socket_idle_timeout": 120,
+    "local_bridge_port": 7007,
+    "ssl_cert_key": "/home/giovanni/CA/dcfilippetti/dcfilippetti.pkcs8.key",
+    "ssl_cert": "/home/giovanni/CA/dcfilippetti/dcfilippetti.crt",
+    "ssl_trust": "/home/giovanni/CA/rootCA.pem"
   }
 }
