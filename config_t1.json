@@ -10,8 +10,8 @@
     "socket_idle_timeout": 120,
     "remote_bridge_host": "localhost",
     "remote_bridge_port": 7007,
-    "ssl_cert_key": "/home/giovanni/CA/demo.it/demo.it.pkcs8.key",
-    "ssl_cert": "/home/giovanni/CA/demo.it/demo.it.crt",
-    "ssl_trust": "/home/giovanni/CA/rootCA.pem"
+    "ssl_cert_key": "/opt/CA/t1.com/t1.com.pkcs8.key",
+    "ssl_cert": "/opt/CA/t1.com/t1.com.crt",
+    "ssl_trust": "/opt/CA/rootCA.pem"
   }
 }
