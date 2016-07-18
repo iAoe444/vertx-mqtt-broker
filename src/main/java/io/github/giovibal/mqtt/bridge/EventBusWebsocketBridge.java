@@ -145,12 +145,10 @@ public class EventBusWebsocketBridge {
                 sock.resume();
             } else {
                 String tenant = cmd;
-//                if (tenant == null || tenant.trim().length()==0) {
-                    String tenantFromCert = new CertInfo(sock).getTenant();
-                    if (tenantFromCert != null) {
-                        tenant = tenantFromCert;
-                    }
-//                }
+                String tenantFromCert = new CertInfo(sock).getTenant();
+                if (tenantFromCert != null)
+                    tenant = tenantFromCert;
+
                 setTenant(tenant);
             }
         });
