@@ -36,9 +36,9 @@ If your broker websocket bridge is exposed throught dns as "http://mqtt.acme.it:
         "websocket_enabled": true,
         "socket_idle_timeout": 120,
         "local_bridge_port": 7007,
-        "ssl_cert_key": "/home/giovanni/CA/dcfilippetti/dcfilippetti.pkcs8.key",
-        "ssl_cert": "/home/giovanni/CA/dcfilippetti/dcfilippetti.crt",
-        "ssl_trust": "/home/giovanni/CA/rootCA.pem"
+        "ssl_cert_key": "/opt/CA/dcfilippetti/dcfilippetti.pkcs8.key",
+        "ssl_cert": "/opt/CA/dcfilippetti/dcfilippetti.crt",
+        "ssl_trust": "/opt/CA/rootCA.pem"
       }
     }
 
@@ -65,9 +65,9 @@ If your broker websocket bridge is exposed throught dns as "http://mqtt.acme.it:
         "socket_idle_timeout": 120,
         "remote_bridge_host": "localhost",
         "remote_bridge_port": 7007,
-        "ssl_cert_key": "/home/giovanni/CA/t1.com/t1.com.pkcs8.key",
-        "ssl_cert": "/home/giovanni/CA/t1.com/t1.com.crt",
-        "ssl_trust": "/home/giovanni/CA/rootCA.pem"
+        "ssl_cert_key": "/opt/CA/t1.com/t1.com.pkcs8.key",
+        "ssl_cert": "/opt/CA/t1.com/t1.com.crt",
+        "ssl_trust": "/opt/CA/rootCA.pem"
       }
     }
 
