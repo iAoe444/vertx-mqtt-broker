@@ -148,7 +148,11 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     private void _handleConnectMessage(ConnectMessage connectMessage) {
         if (!cleanSession) {
             logger.debug("cleanSession=false: restore old session state with subscriptions ...");
-
+            /*
+            1. check if a prior session is present then restore; if not: create new session and persist it
+            2. retrieve all subscriptions from session, and resubscribe to all
+            3. resent all qos 1,2 messages not "acknowledged"
+             */
         }
         boolean isWillFlag = connectMessage.isWillFlag();
         if(isWillFlag) {
