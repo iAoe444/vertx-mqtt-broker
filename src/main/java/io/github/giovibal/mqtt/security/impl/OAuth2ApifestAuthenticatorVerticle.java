@@ -133,11 +133,16 @@ public class OAuth2ApifestAuthenticatorVerticle extends AuthenticatorVerticle {
                         String expires_in = j.getString("expires_in");
                         String scope = j.getString("scope");
                         String refresh_expires_in = j.getString("refresh_expires_in");
+                        String error = j.getString("error");
 
                         AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-                        vi.auth_valid = true;
-                        vi.authorized_user = username;
-                        vi.error_msg = "";
+                        if(new_access_token != null && new_access_token.trim().length()>0) {
+                            vi.auth_valid = true;
+                            vi.authorized_user = username;
+                        } else {
+                            vi.auth_valid = false;
+                            vi.error_msg = error;
+                        }
 
                         JsonObject json = new JsonObject();
                         json = vi.toJson();
