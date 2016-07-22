@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by giova_000 on 23/02/2015.
+ * Created by Giovanni Baleani on 23/02/2015.
  */
 public class AuthenticatorConfig {
 
