@@ -2,7 +2,7 @@ FROM java:8-alpine
 
 WORKDIR /opt
 
-ADD target/vertx-mqtt-broker-2.2.3-fat.jar mqtt-broker.jar
+ADD target/vertx-mqtt-broker-2.2.4-fat.jar mqtt-broker.jar
 ADD config.json config.json
 
 ENTRYPOINT ["java", "-jar", "-XX:OnOutOfMemoryError=\"kill -9 %p\"", "-XX:+UseG1GC", "mqtt-broker.jar"]
