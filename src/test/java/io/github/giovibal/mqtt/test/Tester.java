@@ -31,7 +31,7 @@ public class Tester {
 //            test2(200, 5, 0, 1);
 //            Thread.sleep(40*1000);
 //        }
-        test2(200, 10, 0, 10000);
+        test2(10, 10000, 0, 2*1000);
 //        test2(3, 1000, 0, 1);
 //        test2(5, 1000, 0, 10);
 //        test2(5, 1000, 0, 1);
@@ -94,8 +94,9 @@ public class Tester {
         stats("------------------------------------------------------------------");
         stats("Test clients: "+ numClients +", num msg: "+ numMessagesToPublishPerClient +", qos: "+ qos +" sleep: "+sleepMilliSeconds +" millis.");
         stats("------------------------------------------------------------------");
-//        String topic = "test/untopic/a";
+//        String topic = "test";
         String topic = generateRandomTopic("test/RND/RND/a");
+//        String topic = "test/RND/RND/a";
         String topicFilter = "test/+/+/a";
 
         long t1,t2,t3;
@@ -108,7 +109,7 @@ public class Tester {
         Tester cPubs = new Tester(numClients, "PUBS", serverURLPublishers);
         cPubs.connect();
 
-        boolean retain = true;
+        boolean retain = false;
         cPubs.publish(numMessagesToPublishPerClient, topic, qos, retain);
         cPubs.disconnect();
 
@@ -117,8 +118,8 @@ public class Tester {
             Thread.sleep(sleepMilliSeconds);
         }
 
-//        cSubs.unsubcribe(topic);
-//        cSubs.disconnect();
+        cSubs.unsubcribe(topic);
+        cSubs.disconnect();
 
         cPubs.publishStats();
         cSubs.subscribeStats();
@@ -194,7 +195,8 @@ public class Tester {
     public void subscribe(String topic) throws MqttException {
         log("subscribe topic: " + topic + " ...");
         for (IMqttClient client : clients) {
-            client.subscribe(topic, 2);
+//            client.subscribe(topic, 2);
+            client.subscribe(topic);
         }
     }
     public void unsubcribe(String topic) throws MqttException {
