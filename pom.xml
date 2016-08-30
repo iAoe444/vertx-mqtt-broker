@@ -11,7 +11,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--<vertx.version>3.1.0</vertx.version>&lt;!&ndash; N.B. vert.x 3.2.1 bring a bug in bridge code &ndash;&gt;-->
         <vertx.version>3.3.2</vertx.version>
         <vertx.scope>provided</vertx.scope>
         <wso2.scope>provided</wso2.scope>
