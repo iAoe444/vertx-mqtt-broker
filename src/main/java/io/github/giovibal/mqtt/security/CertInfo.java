@@ -1,8 +1,6 @@
 package io.github.giovibal.mqtt.security;
 
-import io.github.giovibal.mqtt.Container;
 import io.vertx.core.http.ServerWebSocket;
-import io.vertx.core.http.WebSocket;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetSocket;
@@ -13,7 +11,6 @@ import javax.naming.ldap.Rdn;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.cert.CertificateException;
 import javax.security.cert.X509Certificate;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 

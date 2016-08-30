@@ -1,12 +1,8 @@
 package io.github.giovibal.mqtt.parser;
 
-import io.github.giovibal.mqtt.Container;
-import io.github.giovibal.mqtt.MQTTNetSocketWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.CorruptedFrameException;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeMap;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.dna.mqtt.moquette.proto.messages.AbstractMessage;

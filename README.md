@@ -25,12 +25,6 @@ run as normal java ...
 java -jar target/vertx-mqtt-broker-<version>-fat.jar -c config.json
 ```
 
-cluster ...
-```
-vertx run maven:io.github.giovibal.mqtt:vertx-mqtt-broker-mod:2.2-SNAPSHOT::mqtt-broker -conf config.json -cluster -cluster-host <IP>
-vertx run io.github.giovibal.mqtt.MQTTBroker -cp target/vertx-mqtt-broker-mod-2.2-SNAPSHOT-fat.jar -conf config1.json -cluster -cluster-host <IP>
-```
-
 Features
 ----
 * Suport both QoS 0, 1 and 2 messages
@@ -42,5 +36,5 @@ Features
 * Oauth2 authentication integrated with <a href="http://wso2.com/products/identity-server/">WSO2 Identity Server</a>
 and <a href="http://apifest.com/">apifest.com</a>
 * TLS support over TCP and Websocket
-* Multiple endpoint configuration in the same broker instance
-* Broker-to-Broker bidirectional bridge over websocket
+* Multiple tcp connections configurable in the same broker instance
+* Broker-to-Broker bidirectional bridge over TCP, websocket with TLS support

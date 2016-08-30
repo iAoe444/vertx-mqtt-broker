@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt.bridge;
 
-import io.github.giovibal.mqtt.Container;
 import io.github.giovibal.mqtt.MQTTSession;
 import io.github.giovibal.mqtt.security.CertInfo;
 import io.vertx.core.AbstractVerticle;

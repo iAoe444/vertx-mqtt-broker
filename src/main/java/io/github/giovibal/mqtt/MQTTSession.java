@@ -148,6 +148,11 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     private void _handleConnectMessage(ConnectMessage connectMessage) {
         if (!cleanSession) {
             logger.debug("cleanSession=false: restore old session state with subscriptions ...");
+            /*
+            1. check if a prior session is present then restore; if not: create new session and persist it
+            2. retrieve all subscriptions from session, and resubscribe to all
+            3. resent all qos 1,2 messages not "acknowledged"
+             */
         }
         boolean isWillFlag = connectMessage.isWillFlag();
         if(isWillFlag) {
@@ -218,7 +223,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     public void handlePublishMessage(PublishMessage publishMessage) {
         try {
             // publish always have tenant, if session is not tenantized, tenant is retrieved from topic ([tenant]/to/pi/c)
-            String publishTenant = calculatePublishTenant(publishMessage);
+            String publishTenant = calculatePublishTenant(publishMessage.getTopicName());
 
             // store retained messages ...
             if(publishMessage.isRetainFlag()) {
@@ -247,23 +252,11 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             DeliveryOptions opt = new DeliveryOptions().addHeader(TENANT_HEADER, publishTenant);
             vertx.eventBus().publish(ADDRESS, msg, opt);
 
-//            NOT TESTED... It's only a code sample trying to resolve "No pong from server" error messages in production ...
-//            MessageProducer<Buffer> producer = vertx.eventBus().publisher(ADDRESS);
-//            producer.deliveryOptions(opt);
-//            producer.write(msg);
-//            if (producer.writeQueueFull()) {
-////                producer.pause();
-////                producer.drainHandler( done -> producer.resume());
-//            }
-
         } catch(Throwable e) {
             logger.error(e.getMessage());
         }
     }
 
-    private String calculatePublishTenant(PublishMessage publishMessage) {
-        return calculatePublishTenant(publishMessage.getTopicName());
-    }
     private String calculatePublishTenant(String topic) {
         boolean isTenantSession = isTenantSession();
         if(isTenantSession) {
@@ -271,19 +264,22 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         } else {
             String t;
             boolean slashFirst = topic.startsWith("/");
+            int idx_start = 0;
+            int idx_end = -1;
             if (slashFirst) {
-                int idx = topic.indexOf('/', 1);
-                if(idx>1)
-                    t = topic.substring(1, idx);
-                else
-                    t = topic.substring(1);
+                idx_start = 1;
             } else {
-                int idx = topic.indexOf('/', 0);
-                if(idx>0)
-                    t = topic.substring(0, idx);
-                else
-                    t = topic;
+                idx_start = 0;
             }
+
+            idx_end = topic.indexOf('/', idx_start);
+            if(idx_end>1 && idx_end > idx_start) {
+                t = topic.substring(idx_start, idx_end);
+            } else {
+//                t = topic.substring(idx_start);
+                t = ""; // global tenant...
+            }
+
             return t;
         }
     }

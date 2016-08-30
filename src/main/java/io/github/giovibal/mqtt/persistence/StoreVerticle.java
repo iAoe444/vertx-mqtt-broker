@@ -9,10 +9,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by giova_000 on 04/06/2015.
@@ -65,6 +62,11 @@ public class StoreVerticle extends AbstractVerticle {
         }
         return db.get(tenant);
     }
+    private Set<String> dbTenants() {
+        if(db != null)
+            return db.keySet();
+        return Collections.emptySet();
+    }
 
 
 
@@ -84,20 +86,37 @@ public class StoreVerticle extends AbstractVerticle {
         String topicFilter = request.getString("topicFilter");
         String tenant = request.getString("tenant");
         List<JsonObject> list = new ArrayList<>();
-        Map<String, byte[]> db = db(tenant);
-
-        for(String topic : db.keySet()) {
-            boolean topicMatch = topicsManager.match(topic, topicFilter);
-            if(topicMatch) {
-                byte[] message = db.get(topic);
-                JsonObject item = new JsonObject().put("topic", topic).put("message", message);
-                list.add(item);
+        if(tenant != null && tenant.trim().length()>0) {
+            List<JsonObject> alist = getRetainedMessagesByTopicFilter(tenant, topicFilter);
+            list.addAll(alist);
+        } else {
+            Set<String> tenants = dbTenants();
+            for (String atenant : tenants) {
+                List<JsonObject> alist = getRetainedMessagesByTopicFilter(atenant, topicFilter);
+                list.addAll(alist);
             }
         }
 
         JsonObject response = new JsonObject();
         response.put("results", new JsonArray(list));
         return response;
+    }
+
+    private List<JsonObject> getRetainedMessagesByTopicFilter(String tenant, String topicFilter) {
+        List<JsonObject> list = new ArrayList<>();
+        if(tenant != null && tenant.trim().length()>0) {
+            Map<String, byte[]> db = db(tenant);
+
+            for (String topic : db.keySet()) {
+                boolean topicMatch = topicsManager.match(topic, topicFilter);
+                if (topicMatch) {
+                    byte[] message = db.get(topic);
+                    JsonObject item = new JsonObject().put("topic", topic).put("message", message);
+                    list.add(item);
+                }
+            }
+        }
+        return list;
     }
 
     private JsonObject deleteRetainMessage(JsonObject request) {
