@@ -6,6 +6,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetSocket;
 
+import java.util.Map;
+
 /**
  * Created by giovanni on 07/05/2014.
  */
@@ -15,8 +17,8 @@ public class MQTTNetSocket extends MQTTSocket {
 
     private NetSocket netSocket;
 
-    public MQTTNetSocket(Vertx vertx, ConfigParser config, NetSocket netSocket) {
-        super(vertx, config);
+    public MQTTNetSocket(Vertx vertx, ConfigParser config, NetSocket netSocket, Map<String, MQTTSession> sessions) {
+        super(vertx, config,sessions);
         this.netSocket = netSocket;
     }
 
