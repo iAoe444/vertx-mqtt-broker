@@ -54,7 +54,6 @@ public class Main {
                                 .setShortName("hh")
                                 .setDescription("vert.x hazelcast ip address of this node (es. -hh 10.0.0.1)")
                                 .setRequired(false)
-                                .setMultiValued(true)
                 )
                 .addOption(new Option()
                                 .setLongName("hazelcast-members")
