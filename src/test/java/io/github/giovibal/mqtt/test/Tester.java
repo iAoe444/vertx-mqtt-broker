@@ -26,48 +26,6 @@ public class Tester {
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
-//        stats("Num Clients / Num Messages Tests");
-//        for(int i=0; i<5; i++) {
-//            test2(200, 5, 0, 1);
-//            Thread.sleep(40*1000);
-//        }
-        test2(10, 10000, 0, 2*1000);
-//        test2(3, 1000, 0, 1);
-//        test2(5, 1000, 0, 10);
-//        test2(5, 1000, 0, 1);
-//        test2(5, 20000, 0, 0);
-//        test2(100, 500, 0, 0);
-//        test2(10, 10000, 0, 0);
-
-//        test2(30, 200, 0, 0);
-//        test2(30, 500, 0, 0);
-//        test2(30, 800, 0, 0);
-//        test2(30, 1000, 0, 0);
-//        test2(30, 100, 1, 1);
-//        test2(30, 100, 2, 1);
-
-//        test2(2, 10000, 2);// 2 client che pubblicano 10000 messaggi ciascuno con qos:2 (4368 millis. arrivati 20000 messaggi)
-//        test2(10, 2000, 2);// 10 client che pubblicano 2000 messaggi ciascuno con qos:2 (11218 millis. arrivati 20000 messaggi)
-//        test2(20, 1000, 2);// 20 client che pubblicano 1000 messaggi ciascuno con qos:2 (21217 millis. arrivati 20000 messaggi)
-//        test2(40, 500, 2);// 40 client che pubblicano 500 messaggi ciascuno con qos:2 (40742 millis. arrivati 20000 messaggi)
-//        test2(40, 50000, 0, 1);// 40 client che pubblicano 500 messaggi ciascuno con qos:0 (4926 millis. arrivati circa 2320 messaggi)
-//        test2(1000, 2, 2);// 10000 client che pubblicano 2 messaggi ciascuno con qos:2 (4368 millis. arrivati 20000 messaggi)
-
-//        test2(10, 30000, 2);// 10 client che pubblicano 30000 messaggi ciascuno con qos:2 (??? millis. arrivati 300000 messaggi)
-        // connectionLost Timed out waiting for a response from the server
-
-//        test2(10, 30000, 0);// 10 client che pubblicano 30000 messaggi ciascuno con qos:0 (59321 millis. arrivati 300000 messaggi)
-//        test2(10, 10000, 0);// 10 client che pubblicano 10000 messaggi ciascuno con qos:0 (19737 millis. arrivati 100000 messaggi)
-//                                                                           Con Hive 2.0.2 (21535 millis. arrivati in media 93000 messaggi)
-//        test2(10, 10000, 2);// 10 client che pubblicano 60000 messaggi ciascuno con qos:2 (36162 millis.)
-//                                                                           Con Hive 2.0.2 (45347 millis. ma arrivati 97446 messaggi per tutti i client - NullPointer sul server)
-//        test2(10, 10000, 1);// 10 client che pubblicano 60000 messaggi ciascuno con qos:1 (22609 millis.)
-//                                                                           Con Hive 2.0.2 (32536 millis. ma arrivati 97435 messaggi per 9 client e 97433 per il primo)
-//        test3(100);
-//        test4(10, 2);
-//        test4(100, 20);
-//        logEnabled=false;
-//        test4(1000, 200);
         System.exit(0);
     }
 
@@ -94,9 +52,8 @@ public class Tester {
         stats("------------------------------------------------------------------");
         stats("Test clients: "+ numClients +", num msg: "+ numMessagesToPublishPerClient +", qos: "+ qos +" sleep: "+sleepMilliSeconds +" millis.");
         stats("------------------------------------------------------------------");
-//        String topic = "test";
+//        String topic = "test/untopic/a";
         String topic = generateRandomTopic("test/RND/RND/a");
-//        String topic = "test/RND/RND/a";
         String topicFilter = "test/+/+/a";
 
         long t1,t2,t3;
@@ -109,7 +66,7 @@ public class Tester {
         Tester cPubs = new Tester(numClients, "PUBS", serverURLPublishers);
         cPubs.connect();
 
-        boolean retain = false;
+        boolean retain = true;
         cPubs.publish(numMessagesToPublishPerClient, topic, qos, retain);
         cPubs.disconnect();
 
@@ -118,8 +75,8 @@ public class Tester {
             Thread.sleep(sleepMilliSeconds);
         }
 
-        cSubs.unsubcribe(topic);
-        cSubs.disconnect();
+//        cSubs.unsubcribe(topic);
+//        cSubs.disconnect();
 
         cPubs.publishStats();
         cSubs.subscribeStats();
@@ -195,8 +152,7 @@ public class Tester {
     public void subscribe(String topic) throws MqttException {
         log("subscribe topic: " + topic + " ...");
         for (IMqttClient client : clients) {
-//            client.subscribe(topic, 2);
-            client.subscribe(topic);
+            client.subscribe(topic, 2);
         }
     }
     public void unsubcribe(String topic) throws MqttException {
@@ -312,6 +268,7 @@ public class Tester {
         }
         return sum;
     }
+
 
     static class MQTTClientHandler implements MqttCallback {
 

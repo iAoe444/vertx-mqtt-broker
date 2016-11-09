@@ -11,7 +11,9 @@ import io.vertx.core.cli.Option;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import org.apache.commons.io.FileUtils;
 
@@ -100,7 +102,6 @@ public class Main {
         }
 
 
-        // TODO: file cluster.xml da parametro
         // use Vert.x CLI per gestire i parametri da riga di comando
         if(hazelcastConfFilePath!=null) {
             try {
@@ -121,6 +122,11 @@ public class Main {
                 VertxOptions options = new VertxOptions().setClusterManager(mgr).setClustered(true);
                 if(clusterHost != null) {
                     options.setClusterHost(clusterHost);
+
+                    NetworkConfig network = hazelcastConfig.getNetworkConfig();
+                    InterfacesConfig interfaces = network.getInterfaces();
+                    interfaces.setEnabled(true);
+                    interfaces.addInterface(clusterHost);
                 }
 
                 logger.info("Hazelcast public address: " +
@@ -136,6 +142,10 @@ public class Main {
                 logger.info("Hazelcast network config: " +
                         hazelcastConfig.getNetworkConfig().toString());
 
+                options.setMetricsOptions(new DropwizardMetricsOptions()
+                        .setEnabled(true)
+                        .setJmxEnabled(true)
+                );
                 Vertx.clusteredVertx(options, res -> {
                     if (res.succeeded()) {
                         Vertx vertx = res.result();
@@ -150,8 +160,14 @@ public class Main {
             }
         } else {
             VertxOptions options = new VertxOptions();
+            options.setMetricsOptions(new DropwizardMetricsOptions()
+                    .setEnabled(true)
+                    .setJmxEnabled(true)
+            );
+
             Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
+
         }
 
 
