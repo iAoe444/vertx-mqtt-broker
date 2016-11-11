@@ -36,7 +36,6 @@ public class ConversionUtility {
 				if (h == -1 || l == -1) {
 					throw new IllegalArgumentException("contains illegal character for hexBinary: " + hex);
 				}
-
 				out[counter++] = (byte) (h * 16 + l);
 			}
 		}
@@ -58,13 +57,12 @@ public class ConversionUtility {
 
 	public static String getHex(byte[] ba) {
 		return getHex(ba, 0, ba.length);
-
 	}
 
 	public static String getHex(byte[] ba, int offset, int length) {
 		return getHex(ba, offset, length, true);
 	}
-	
+
 	public static String getHex(byte[] ba, int offset, int length, boolean prefix) {
 		return (prefix ? "0x" : "") + toHexString(ba, offset, length, "");
 	}
@@ -198,14 +196,6 @@ public class ConversionUtility {
 	public static int unsigned(short b) {
 		int result = b & 0xFFFF;
 		return result;
-	}
-	
-	
-	public static void main(String[] args) {
-		System.out.println(" " + unsigned((byte)0xff));
-		System.out.println(" " + unsigned((short)0xffff));
-		System.out.println(" " + unsigned((int)0xffffffff));
-//		System.out.println(" " + unsigned(0xffff0001));
 	}
 
 }
