@@ -16,22 +16,6 @@ import java.nio.ByteBuffer;
 public class ConversionUtility {
 	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-	// public static byte[] fromHexString(String hex) {
-	// return fromHexString(hex, "");
-	// }
-
-
-	// public static String bytesToHex(byte[] bytes) {
-	// char[] hexChars = new char[bytes.length * 2];
-	// int v;
-	// for (int j = 0; j < bytes.length; j++) {
-	// v = bytes[j] & 0xFF;
-	// hexChars[j * 2] = hexArray[v >>> 4];
-	// hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-	// }
-	// return new String(hexChars);
-	// }
-
 	public static byte[] fromHexString(String hex) {
 		hex = hex.replaceAll("[^A-Fa-f0-9]", "");
 		final int len = hex.length();
@@ -59,46 +43,9 @@ public class ConversionUtility {
 		return out;
 	}
 
-	// public static byte[] fromHexString(String hex, String hexSeparator) {
-	// // hex = hex.replaceAll("[^A-Fa-f0-9]", "");
-	// // char[] hexChars = hex.toCharArray();
-	//
-	// return DatatypeConverter.parseHexBinary(hex);
-	// }
-
-	// public static byte[] fromHexString(String s) {
-	// return ConversionUtility.fromHexString(s, "");
-	// }
-
 	@Deprecated
 	public static byte[] fromHexString(String hex, String hexSeparator) {
 		return fromHexString(hex);
-		// hex = hex.replaceAll("[^A-Fa-f0-9]", hexSeparator);
-		// hexSeparator = hexSeparator != null ? hexSeparator : "";
-		// final int len = hex.length();
-		// final int hs = hexSeparator.length();
-		//
-		// int block = 2 + hs;
-		// int rest = (block - (len % (block)));
-		// rest = rest == block ? 0 : rest;
-		//
-		// byte[] out = null;
-		// if (len > 1) {
-		// out = new byte[(len + rest) / (2 + hs)];
-		//
-		// int counter = 0;
-		//
-		// for (int i = 0; i < len; i += (2 + hs)) {
-		// int h = hexToBin(hex.charAt(i));
-		// int l = hexToBin(hex.charAt(i + 1));
-		// if (h == -1 || l == -1) {
-		// throw new IllegalArgumentException("contains illegal character for hexBinary: " + hex);
-		// }
-		//
-		// out[counter++] = (byte) (h * 16 + l);
-		// }
-		// }
-		// return out;
 	}
 
 	public static String getHex(byte b) {
