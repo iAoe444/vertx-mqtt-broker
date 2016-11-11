@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt.parser;
 
-import io.github.giovibal.mqtt.ConversionUtility;
 import io.netty.buffer.ByteBuf;
 import io.vertx.core.buffer.Buffer;
 import org.dna.mqtt.moquette.proto.messages.AbstractMessage;
