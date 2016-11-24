@@ -22,7 +22,7 @@ public class Tester {
     public static void main(String[] args) throws Exception {
 
 //        stats("Qos Tests");
-//        test2(30, 100, 0, 0);
+        test2(100, 1000, 0, 10000);
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
@@ -75,8 +75,8 @@ public class Tester {
             Thread.sleep(sleepMilliSeconds);
         }
 
-//        cSubs.unsubcribe(topic);
-//        cSubs.disconnect();
+        cSubs.unsubcribe(topic);
+        cSubs.disconnect();
 
         cPubs.publishStats();
         cSubs.subscribeStats();

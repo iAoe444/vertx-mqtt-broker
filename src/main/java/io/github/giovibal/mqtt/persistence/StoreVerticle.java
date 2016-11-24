@@ -4,12 +4,13 @@ import io.github.giovibal.mqtt.ITopicsManager;
 import io.github.giovibal.mqtt.MQTTTopicsManagerOptimized;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by giova_000 on 04/06/2015.
@@ -24,7 +25,12 @@ public class StoreVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
-        this.db = new LinkedHashMap<>();
+//        this.db = new LinkedHashMap<>();
+        Map<String, Map<String, byte[]>> internalMap = new LinkedHashMap<>();
+        PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<String, Map<String, byte[]>>
+                expirePeriod = new PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<>(
+                        1, TimeUnit.DAYS);
+        this.db = new PassiveExpiringMap<>( expirePeriod, internalMap );
         this.topicsManager = new MQTTTopicsManagerOptimized();
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer(ADDRESS);

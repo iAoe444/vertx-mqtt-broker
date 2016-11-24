@@ -15,11 +15,13 @@ import io.vertx.core.eventbus.MessageProducer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.dna.mqtt.moquette.proto.messages.*;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by giovanni on 07/05/2014.
@@ -65,7 +67,12 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         this.retainSupport = config.isRetainSupport();
         this.subscriptions = new LinkedHashMap<>();
         this.qosUtils = new QOSUtils();
-        this.matchingSubscriptionsCache = new HashMap<>();
+//        this.matchingSubscriptionsCache = new HashMap<>();
+        Map<String, List<Subscription>> internalMap = new HashMap<>();
+        PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<String, List<Subscription>>
+                expirePeriod = new PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<>(
+                30, TimeUnit.MINUTES);
+        this.matchingSubscriptionsCache = new PassiveExpiringMap<>( expirePeriod, internalMap );
 
         this.topicsManager = new MQTTTopicsManagerOptimized();
         this.storeManager = new StoreManager(this.vertx);
