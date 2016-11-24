@@ -13,24 +13,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by giova_000 on 04/06/2015.
+ * Created by Giovanni Baleani on 04/06/2015.
  */
 public class StoreVerticle extends AbstractVerticle {
 
     public static final String ADDRESS = StoreVerticle.class.getName()+"_IN";
 
-//    private Map<String, byte[]> db;
     private Map<String, Map<String, byte[]>> db;
     private ITopicsManager topicsManager;
 
     @Override
     public void start() throws Exception {
-//        this.db = new LinkedHashMap<>();
-        Map<String, Map<String, byte[]>> internalMap = new LinkedHashMap<>();
         PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<String, Map<String, byte[]>>
                 expirePeriod = new PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<>(
                         1, TimeUnit.DAYS);
-        this.db = new PassiveExpiringMap<>( expirePeriod, internalMap );
+        this.db = new PassiveExpiringMap<>( expirePeriod, new LinkedHashMap<>() );
         this.topicsManager = new MQTTTopicsManagerOptimized();
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer(ADDRESS);

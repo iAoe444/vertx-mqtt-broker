@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by giovanni on 07/05/2014.
+ * Created by Giovanni Baleani on 07/05/2014.
  * Base class for connection handling, 1 tcp connection corresponds to 1 instance of this class.
  */
 public class MQTTSession implements Handler<Message<Buffer>> {
@@ -33,7 +33,6 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
     public static final String ADDRESS = "io.github.giovibal.mqtt";
     public static final String TENANT_HEADER = "tenant";
-//    public static final String AUTHORIZATION_ADDRESS = "io.github.giovibal.mqtt.OAuth2AuthenticatorVerticle";
 
     private Vertx vertx;
     private MQTTDecoder decoder;
@@ -54,7 +53,6 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     private Map<String, List<Subscription>> matchingSubscriptionsCache;
     private PublishMessage willMessage;
 
-//    private int keepAliveSeconds;
     private long keepAliveTimerID = -1;
     private boolean keepAliveTimeEnded;
     private Handler<String> keepaliveErrorHandler;
@@ -67,12 +65,10 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         this.retainSupport = config.isRetainSupport();
         this.subscriptions = new LinkedHashMap<>();
         this.qosUtils = new QOSUtils();
-//        this.matchingSubscriptionsCache = new HashMap<>();
-        Map<String, List<Subscription>> internalMap = new HashMap<>();
         PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<String, List<Subscription>>
                 expirePeriod = new PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy<>(
                 30, TimeUnit.MINUTES);
-        this.matchingSubscriptionsCache = new PassiveExpiringMap<>( expirePeriod, internalMap );
+        this.matchingSubscriptionsCache = new PassiveExpiringMap<>( expirePeriod, new HashMap<>() );
 
         this.topicsManager = new MQTTTopicsManagerOptimized();
         this.storeManager = new StoreManager(this.vertx);
