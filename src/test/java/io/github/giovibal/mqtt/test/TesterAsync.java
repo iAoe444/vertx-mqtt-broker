@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * Created by giovanni on 08/04/2014.
  */
-public class Tester {
+public class TesterAsync {
     static final String serverURL = "tcp://localhost:1883";
     static final String serverURLSubscribers = serverURL;
     static final String serverURLPublishers = serverURL;
@@ -19,7 +19,7 @@ public class Tester {
     public static void main(String[] args) throws Exception {
 
 //        stats("Qos Tests");
-        test2(10, 10000, 0, 1000);
+        test2(10, 30000, 0, 0);
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
@@ -56,11 +56,11 @@ public class Tester {
         long t1,t2,t3;
         t1=System.currentTimeMillis();
 
-        Tester cSubs = new Tester(numClients, "SUBS", serverURLSubscribers);
+        TesterAsync cSubs = new TesterAsync(numClients, "SUBS", serverURLSubscribers);
         cSubs.connect();
         cSubs.subscribe(topicFilter);
 
-        Tester cPubs = new Tester(numClients, "PUBS", serverURLPublishers);
+        TesterAsync cPubs = new TesterAsync(numClients, "PUBS", serverURLPublishers);
         cPubs.connect();
 
         boolean retain = true;
@@ -99,14 +99,14 @@ public class Tester {
 
 
 
-    private List<IMqttClient> clients = new ArrayList<>();
+    private List<IMqttAsyncClient> clients = new ArrayList<>();
     private List<MQTTClientHandler> clientHandlers = new ArrayList<>();
 
-    public Tester(int numClients, String clientIDPrefix, String serverURL) throws MqttException {
+    public TesterAsync(int numClients, String clientIDPrefix, String serverURL) throws MqttException {
         for(int i=1; i<=numClients; i++) {
             String clientID = clientIDPrefix+"_" + i;
 
-            MqttClient client = new MqttClient(serverURL, clientID, new MemoryPersistence());
+            MqttAsyncClient client = new MqttAsyncClient(serverURL, clientID, new MemoryPersistence());
             MQTTClientHandler h = new MQTTClientHandler(clientID);
             client.setCallback(h);
 
@@ -116,7 +116,7 @@ public class Tester {
     }
     public void connect() throws MqttException {
         log("connect ...");
-        for(IMqttClient client : clients) {
+        for(IMqttAsyncClient client : clients) {
             MqttConnectOptions o = new MqttConnectOptions();
 //            if(this.serverURL.startsWith("ssl")) {
 //                try {
@@ -135,26 +135,26 @@ public class Tester {
 //            try {
 //                o.setWill("$SYS/config", new String("{\"retain\":false}").getBytes("UTF-8"), 0, false);
 //            } catch (Throwable e) { e.printStackTrace(); }
-            client.connect(o);
+            client.connect(o).waitForCompletion();
         }
     }
 
     public void disconnect() throws MqttException {
         log("disconnet ...");
-        for(IMqttClient client : clients) {
+        for(IMqttAsyncClient client : clients) {
             client.disconnect();
         }
     }
 
     public void subscribe(String topic) throws MqttException {
         log("subscribe topic: " + topic + " ...");
-        for (IMqttClient client : clients) {
+        for (IMqttAsyncClient client : clients) {
             client.subscribe(topic, 2);
         }
     }
     public void unsubcribe(String topic) throws MqttException {
         log("unsubscribe topic: " + topic + " ...");
-        for (IMqttClient client : clients) {
+        for (IMqttAsyncClient client : clients) {
             client.unsubscribe(topic);
         }
     }
@@ -162,7 +162,7 @@ public class Tester {
     public void publish(String topic) throws Exception {
         log("publih ...");
         MqttMessage m;
-        for(IMqttClient client : clients) {
+        for(IMqttAsyncClient client : clients) {
 
             m = new MqttMessage();
             m.setQos(2);
@@ -210,7 +210,7 @@ public class Tester {
     public void publish(int numMessages, String topic, int qos, boolean retained) throws Exception {
         log("publih ...");
         MqttMessage m;
-        for(IMqttClient client : clients) {
+        for(IMqttAsyncClient client : clients) {
             for(int i=0; i<numMessages; i++) {
                 String msg = "msg "+i+" qos="+qos+" retained="+ retained;
                 m = new MqttMessage();

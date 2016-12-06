@@ -16,7 +16,6 @@
         <wso2.scope>provided</wso2.scope>
     </properties>
 
-
     <repositories>
         <repository>
             <id>sonatype-nexus-snapshots</id>
@@ -31,7 +30,6 @@
             <url>http://maven.wso2.org/nexus/content/groups/public/</url>
         </repository>
     </repositories>
-
 
     <dependencies>
         <dependency>
