@@ -78,7 +78,8 @@ public class OAuth2AuthenticatorVerticle extends AuthenticatorVerticle {
     ) throws MalformedURLException {
         HttpClientOptions opt = new HttpClientOptions();
         HttpClient httpClient = vertx.createHttpClient(opt);
-        URL url = new URL(identityURL);
+        URL url = new URL(identityURL + "/oauth2/token");
+        logger.info("auth url "+ url);
         HttpClientRequest loginReq = httpClient.post(url.getPort(), url.getHost(), url.getPath(), resp -> {
             resp.exceptionHandler(e -> {
                 logger.fatal(e.getMessage(), e);
