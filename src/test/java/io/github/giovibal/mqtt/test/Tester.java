@@ -19,7 +19,7 @@ public class Tester {
     public static void main(String[] args) throws Exception {
 
 //        stats("Qos Tests");
-        test2(10, 10000, 0, 1000);
+        test2(200, 10, 0, 4000);
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
