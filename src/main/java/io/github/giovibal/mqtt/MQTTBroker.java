@@ -17,6 +17,9 @@ import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by giovanni on 11/04/2014.
  * The Main Verticle
@@ -169,8 +172,9 @@ public class MQTTBroker extends AbstractVerticle {
             );
         }
         NetServer netServer = vertx.createNetServer(opt);
+        Map<String, MQTTSession> sessions = new HashMap<>();
         netServer.connectHandler(netSocket -> {
-            MQTTNetSocket mqttNetSocket = new MQTTNetSocket(vertx, c, netSocket);
+            MQTTNetSocket mqttNetSocket = new MQTTNetSocket(vertx, c, netSocket, sessions);
             mqttNetSocket.start();
         }).listen();
     }
@@ -196,8 +200,9 @@ public class MQTTBroker extends AbstractVerticle {
             );
         }
         HttpServer http = vertx.createHttpServer(httpOpt);
+        Map<String, MQTTSession> sessions = new HashMap<>();
         http.websocketHandler(serverWebSocket -> {
-            MQTTWebSocket mqttWebSocket = new MQTTWebSocket(vertx, c, serverWebSocket);
+            MQTTWebSocket mqttWebSocket = new MQTTWebSocket(vertx, c, serverWebSocket, sessions);
             mqttWebSocket.start();
         }).listen();
     }

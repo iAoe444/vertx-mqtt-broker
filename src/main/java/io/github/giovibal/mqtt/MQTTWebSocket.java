@@ -6,6 +6,8 @@ import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.util.Map;
+
 /**
  * Created by giovanni on 07/05/2014.
  */
@@ -15,8 +17,8 @@ public class MQTTWebSocket extends MQTTSocket {
     
     private ServerWebSocket netSocket;
 
-    public MQTTWebSocket(Vertx vertx, ConfigParser config, ServerWebSocket netSocket) {
-        super(vertx, config);
+    public MQTTWebSocket(Vertx vertx, ConfigParser config, ServerWebSocket netSocket, Map<String, MQTTSession> sessions) {
+        super(vertx, config, sessions);
         this.netSocket = netSocket;
     }
 

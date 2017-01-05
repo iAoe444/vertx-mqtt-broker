@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Giovanni Baleani on 07/05/2014.
@@ -57,6 +58,9 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     private boolean keepAliveTimeEnded;
     private Handler<String> keepaliveErrorHandler;
 
+
+    private Queue<PublishMessage> queue;
+
     public MQTTSession(Vertx vertx, ConfigParser config) {
         this.vertx = vertx;
         this.decoder = new MQTTDecoder();
@@ -73,6 +77,21 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         this.topicsManager = new MQTTTopicsManagerOptimized();
         this.storeManager = new StoreManager(this.vertx);
         this.authenticatorAddress = config.getAuthenticatorAddress();
+
+        this.queue = new LinkedList<>();
+    }
+
+    public void addMessageToQueue(PublishMessage pm) {
+        queue.add(pm);
+    }
+    public PublishMessage getMessageFromQueue() {
+        return queue.poll();
+    }
+    public void sendAllMessagesFromQueue() {
+        PublishMessage queuedMessage;
+        while ((queuedMessage = getMessageFromQueue()) != null) {
+            sendPublishMessage(queuedMessage);
+        }
     }
 
     private String extractTenant(String username) {
@@ -156,29 +175,31 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             2. retrieve all subscriptions from session, and resubscribe to all
             3. resent all qos 1,2 messages not "acknowledged"
              */
-        }
-        boolean isWillFlag = connectMessage.isWillFlag();
-        if(isWillFlag) {
-            String willMessageM = connectMessage.getWillMessage();
-            String willTopic = connectMessage.getWillTopic();
-            byte willQosByte = connectMessage.getWillQos();
-            AbstractMessage.QOSType willQos = qosUtils.toQos(willQosByte);
 
-            try {
-                willMessage = new PublishMessage();
-                willMessage.setPayload(willMessageM);
-                willMessage.setTopicName(willTopic);
-                willMessage.setQos(willQos);
-                switch (willQos) {
-                    case EXACTLY_ONCE:
-                    case LEAST_ONE:
-                        willMessage.setMessageID(1);
+        }
+        else {
+            boolean isWillFlag = connectMessage.isWillFlag();
+            if (isWillFlag) {
+                String willMessageM = connectMessage.getWillMessage();
+                String willTopic = connectMessage.getWillTopic();
+                byte willQosByte = connectMessage.getWillQos();
+                AbstractMessage.QOSType willQos = qosUtils.toQos(willQosByte);
+
+                try {
+                    willMessage = new PublishMessage();
+                    willMessage.setPayload(willMessageM);
+                    willMessage.setTopicName(willTopic);
+                    willMessage.setQos(willQos);
+                    switch (willQos) {
+                        case EXACTLY_ONCE:
+                        case LEAST_ONE:
+                            willMessage.setMessageID(1);
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    logger.error(e.getMessage(), e);
                 }
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
             }
         }
-
         startKeepAliveTimer(connectMessage.getKeepAlive());
         logger.info("New connection client : " + getClientInfo());
     }
@@ -406,6 +427,9 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             int iOkQos = qosUtils.calculatePublishQos(iSentQos, maxQos);
             AbstractMessage.QOSType qos = qosUtils.toQos(iOkQos);
             publishMessage.setQos(qos);
+            if(!cleanSession && iSentQos>0) {
+                addMessageToQueue(publishMessage);
+            }
             sendPublishMessage(publishMessage);
         }
     }
@@ -483,5 +507,17 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     public String getClientInfo() {
         String clientInfo ="clientID: "+ clientID +", MQTT protocol: "+ protoName +"";
         return clientInfo;
+    }
+
+    public String getClientID() {
+        return clientID;
+    }
+
+    public String getProtoName() {
+        return protoName;
+    }
+
+    public boolean isCleanSession() {
+        return cleanSession;
     }
 }
