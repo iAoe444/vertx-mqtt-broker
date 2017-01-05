@@ -1,6 +1,7 @@
 package io.github.giovibal.mqtt;
 
 import com.hazelcast.config.*;
+import io.github.giovibal.mqtt.rest.RestApiVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -149,6 +150,7 @@ public class Main {
                     if (res.succeeded()) {
                         Vertx vertx = res.result();
                         vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
+                        vertx.deployVerticle(RestApiVerticle.class.getName());
                     } else {
                         // failed!
                         logger.fatal(res.cause().getMessage(), res.cause());
@@ -166,11 +168,13 @@ public class Main {
 
             Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
-
+            vertx.deployVerticle(RestApiVerticle.class.getName());
         }
 
 
     }
+
+
     public static void stop(String[] args) {
         System.exit(0);
     }
