@@ -36,9 +36,9 @@ public class RestApiVerticle extends AbstractVerticle {
         long size1mb = 1024*1024 ; //bytes
         router.route().handler(BodyHandler.create().setBodyLimit(size1mb));
 
-        // http://<host:port>/mqtt/publish?channel=&lt;channel1&gt;&qos=0&retained=0
+        // http://<host:port>/pubsub/publish?channel=&lt;channel1&gt;&qos=0&retained=0
         // qos: MOST_ONE, LEAST_ONE, EXACTLY_ONC
-        router.post("/mqtt/publish").handler( req -> {
+        router.post("/pubsub/publish").handler( req -> {
             String tenant;
             if(req.request().headers().contains("tenant")) {
                 tenant = req.request().headers().get("tenant");
