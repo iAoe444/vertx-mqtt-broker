@@ -6,6 +6,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -24,6 +25,9 @@ public class RestApiVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
+        JsonObject restServerConf = config().getJsonObject("rest_server", new JsonObject());
+        int httpPort = restServerConf.getInteger("port", 2883);
+
         String mqttAddress = MQTTSession.ADDRESS;
 
         HttpServer server = vertx.createHttpServer();
@@ -75,7 +79,7 @@ public class RestApiVerticle extends AbstractVerticle {
         });
 
 
-        server.requestHandler(router::accept).listen(2883, event -> {
+        server.requestHandler(router::accept).listen(httpPort, event -> {
             if (event.succeeded()) {
                 logger.info("RestApiVerticle http server started on http://<host>:" + server.actualPort());
             } else {

@@ -150,7 +150,7 @@ public class Main {
                     if (res.succeeded()) {
                         Vertx vertx = res.result();
                         vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
-                        vertx.deployVerticle(RestApiVerticle.class.getName());
+                        vertx.deployVerticle(RestApiVerticle.class.getName(), deploymentOptions);
                     } else {
                         // failed!
                         logger.fatal(res.cause().getMessage(), res.cause());
@@ -168,7 +168,7 @@ public class Main {
 
             Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
-            vertx.deployVerticle(RestApiVerticle.class.getName());
+            vertx.deployVerticle(RestApiVerticle.class.getName(), deploymentOptions);
         }
 
 
