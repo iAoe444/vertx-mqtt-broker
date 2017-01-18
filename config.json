@@ -40,6 +40,9 @@
     "ssl_cert": "/certs/tenant1/tenant1.crt",
     "ssl_trust": "/certs/CA/rootCA.pem"
   },
+  "rest_server": {
+    "port": 2883
+  },
   "authenticators": [
     {
       "verticle": "io.github.giovibal.mqtt.security.impl.OAuth2AuthenticatorVerticle",
