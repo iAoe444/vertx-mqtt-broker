@@ -45,6 +45,7 @@ public class RestApiVerticle extends AbstractVerticle {
             } else {
                 tenant = req.request().params().get("tenant");
             }
+            // TODO: rename "channel" to "topic", and fallback to "channel" for retro compatibility.
             String channel = req.request().params().get("channel");
             String qos = req.request().params().get("qos");
             String retained = req.request().params().get("retained");
