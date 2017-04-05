@@ -1,9 +1,14 @@
 package io.github.giovibal.mqtt.security;
 
+import java.util.List;
+
+import org.dna.mqtt.moquette.proto.messages.SubscribeMessage.Couple;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -28,6 +33,7 @@ public class AuthorizationClient {
         JsonObject oauth2_token_info = new JsonObject()
                 .put("username", username)
                 .put("password", password);
+
         eventBus.send(authenticatorAddress, oauth2_token_info, (AsyncResult<Message<JsonObject>> res) -> {
             ValidationInfo vi = new ValidationInfo();
             if (res.succeeded()) {
@@ -50,16 +56,54 @@ public class AuthorizationClient {
         });
     }
 
+    public void authorizePublish(String token, String topic, Handler<Boolean> authHandler) {
+       	JsonObject info = new JsonObject();
+       	info.put("token", token);
+    	info.put("topic", topic);
+        eventBus.send(authenticatorAddress+".publish", info, (AsyncResult<Message<JsonObject>> res) -> {
+        	boolean status = false;
+            if (res.succeeded()) {
+            	JsonObject reply = res.result().body();
+            	if (reply.containsKey("permitted")) {
+            		status = reply.getBoolean("permitted");
+            	}
+            }
+        	authHandler.handle(status);
+        });
+    }
+
+    public void authorizeSubscribe(String token, List<Couple> topics, Handler<JsonArray> authHandler) {
+    	JsonArray topicArray = new JsonArray();
+    	topics.forEach(topic -> {
+    		topicArray.add(topic.getTopicFilter());
+    	});
+       	JsonObject info = new JsonObject();
+       	info.put("token", token);
+    	info.put("topics", topicArray);
+        eventBus.send(authenticatorAddress+".subscribe", info, (AsyncResult<Message<JsonObject>> res) -> {
+        	JsonArray status = new JsonArray();
+            if (res.succeeded()) {
+            	JsonObject reply = res.result().body();
+            	if (reply.containsKey("permitted")) {
+            		status = reply.getJsonArray("permitted");
+            	}
+            }
+        	authHandler.handle(status);
+        });
+    }
 
     public static class ValidationInfo {
         public Boolean auth_valid;
         public String authorized_user;
         public String error_msg;
         public String tenant;
+        public String token = null;
+        
         public void fromJson(JsonObject validationInfo) {
             auth_valid = validationInfo.getBoolean("auth_valid", Boolean.FALSE);
             authorized_user = validationInfo.getString("authorized_user");
             error_msg = validationInfo.getString("error_msg");
+            token = validationInfo.getString("token");
             if (auth_valid) {
                 tenant = extractTenant(authorized_user);
             }
@@ -69,6 +113,9 @@ public class AuthorizationClient {
             json.put("auth_valid", auth_valid);
             json.put("authorized_user", authorized_user);
             json.put("error_msg", error_msg);
+            if (token != null) {
+            	json.put("token", token);
+            }
             return json;
         }
         private String extractTenant(String username) {

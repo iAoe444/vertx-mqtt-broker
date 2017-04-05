@@ -138,7 +138,11 @@ public class Tester {
             client.connect(o);
         }
     }
-
+    public void connect(MqttConnectOptions o) throws MqttException {
+        for (IMqttClient client : clients) {
+        	client.connect(o);
+        }
+    }
     public void disconnect() throws MqttException {
         log("disconnet ...");
         for(IMqttClient client : clients) {

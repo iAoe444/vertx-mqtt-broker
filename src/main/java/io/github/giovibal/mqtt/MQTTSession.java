@@ -12,6 +12,7 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.eventbus.MessageProducer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -45,6 +46,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     private String tenant;
     private boolean securityEnabled;
     private String authenticatorAddress;
+    private String authorizationToken = null;
     private boolean retainSupport;
     private MessageConsumer<Buffer> messageConsumer;
     private Handler<PublishMessage> publishMessageHandler;
@@ -77,7 +79,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         this.topicsManager = new MQTTTopicsManagerOptimized();
         this.storeManager = new StoreManager(this.vertx);
         this.authenticatorAddress = config.getAuthenticatorAddress();
-
+        
         this.queue = new LinkedList<>();
     }
 
@@ -139,6 +141,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);
             auth.authorize(username, password, validationInfo -> {
                 if (validationInfo.auth_valid) {
+                	authorizationToken = validationInfo.token;
                     String tenant = validationInfo.tenant;
                     _initTenant(tenant);
                     _handleConnectMessage(connectMessage);
@@ -244,7 +247,21 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     }
 
 
-    public void handlePublishMessage(PublishMessage publishMessage) {
+    public void handlePublishMessage(PublishMessage publishMessage, Handler<Boolean> completedHandler) {
+    	if (authorizationToken != null) {
+            AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);
+            auth.authorizePublish(authorizationToken, publishMessage.getTopicName(), permitted -> {
+            	if (permitted) {
+            		_handlePublishMessage(publishMessage);
+            	}
+        		if (completedHandler != null) completedHandler.handle(permitted);
+            });
+    	} else {
+    		_handlePublishMessage(publishMessage);
+    		if (completedHandler != null) completedHandler.handle(Boolean.TRUE);
+    	}
+    }
+    private void _handlePublishMessage(PublishMessage publishMessage) {
         try {
             // publish always have tenant, if session is not tenantized, tenant is retrieved from topic ([tenant]/to/pi/c)
             String publishTenant = calculatePublishTenant(publishMessage.getTopicName());
@@ -308,7 +325,23 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         }
     }
 
-    public void handleSubscribeMessage(SubscribeMessage subscribeMessage) {
+    public void handleSubscribeMessage(SubscribeMessage subscribeMessage, Handler<JsonArray> completedHandler) {
+    	if (authorizationToken != null) {
+            AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);
+            auth.authorizeSubscribe(authorizationToken, subscribeMessage.subscriptions(), permitted -> {
+           		_handleSubscribeMessage(subscribeMessage, permitted);
+                if (completedHandler != null) completedHandler.handle(permitted);
+            });
+    	} else {
+    		JsonArray permitted = new JsonArray();
+    		for (int i=0; i < subscribeMessage.subscriptions().size(); i++) {
+    			permitted.add(true);
+    		}
+    		_handleSubscribeMessage(subscribeMessage, permitted);
+    		if (completedHandler != null) completedHandler.handle(permitted);
+    	}
+    }
+    private void _handleSubscribeMessage(SubscribeMessage subscribeMessage, JsonArray permitted) {
         try {
             final int messageID = subscribeMessage.getMessageID();
             if(this.messageConsumer==null) {
@@ -320,32 +353,35 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             matchingSubscriptionsCache.clear();
 
             List<SubscribeMessage.Couple> subs = subscribeMessage.subscriptions();
+            int indx = 0;
             for(SubscribeMessage.Couple s : subs) {
-                String topicFilter = s.getTopicFilter();
-                Subscription sub = new Subscription();
-                sub.setQos(s.getQos());
-                sub.setTopicFilter(topicFilter);
-                this.subscriptions.put(topicFilter, sub);
-
-                String publishTenant = calculatePublishTenant(topicFilter);
-
-                // check in client wants receive retained message by this topicFilter
-                if(retainSupport) {
-                    storeManager.getRetainedMessagesByTopicFilter(publishTenant, topicFilter, (List<PublishMessage> retainedMessages) -> {
-                        if (retainedMessages != null) {
-                            int incrMessageID = messageID;
-                            for (PublishMessage retainedMessage : retainedMessages) {
-                                switch (retainedMessage.getQos()) {
-                                    case LEAST_ONE:
-                                    case EXACTLY_ONCE:
-                                        retainedMessage.setMessageID(++incrMessageID);
-                                }
-                                retainedMessage.setRetainFlag(true);
-                                handlePublishMessageReceived(retainedMessage);
-                            }
-                        }
-                    });
-                }
+            	if (permitted.getBoolean(indx++)) {
+	                String topicFilter = s.getTopicFilter();
+	                Subscription sub = new Subscription();
+	                sub.setQos(s.getQos());
+	                sub.setTopicFilter(topicFilter);
+	                this.subscriptions.put(topicFilter, sub);
+	
+	                String publishTenant = calculatePublishTenant(topicFilter);
+	
+	                // check in client wants receive retained message by this topicFilter
+	                if(retainSupport) {
+	                    storeManager.getRetainedMessagesByTopicFilter(publishTenant, topicFilter, (List<PublishMessage> retainedMessages) -> {
+	                        if (retainedMessages != null) {
+	                            int incrMessageID = messageID;
+	                            for (PublishMessage retainedMessage : retainedMessages) {
+	                                switch (retainedMessage.getQos()) {
+	                                    case LEAST_ONE:
+	                                    case EXACTLY_ONCE:
+	                                        retainedMessage.setMessageID(++incrMessageID);
+	                                }
+	                                retainedMessage.setRetainFlag(true);
+	                                handlePublishMessageReceived(retainedMessage);
+	                            }
+	                        }
+	                    });
+	                }
+            	}
             }
         } catch(Throwable e) {
             logger.error(e.getMessage());
@@ -500,7 +536,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         // publish will message if present ...
         if(willMessage != null) {
             logger.debug("publish will message ... topic[" + willMessage.getTopicName()+"]");
-            handlePublishMessage(willMessage);
+            handlePublishMessage(willMessage, null);
         }
     }
 

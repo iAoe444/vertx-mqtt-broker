@@ -25,7 +25,11 @@ class SubAckEncoder extends DemuxEncoder<SubAckMessage> {
             buff.writeBytes(Utils.encodeRemainingLength(variableHeaderSize));
             buff.writeShort(message.getMessageID());
             for (AbstractMessage.QOSType c : message.types()) {
-                buff.writeByte(c.ordinal());
+            	if (c == AbstractMessage.QOSType.FAILURE) {
+            		buff.writeByte(AbstractMessage.QOSType.FAILURE_VALUE);
+            	} else {
+            		buff.writeByte(c.ordinal());
+            	}
             }
 
             out.writeBytes(buff);

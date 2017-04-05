@@ -18,7 +18,7 @@ import static org.dna.mqtt.moquette.proto.messages.AbstractMessage.*;
  * Base class for connection handling, 1 tcp connection corresponds to 1 instance of this class.
  */
 public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerListener, Handler<Buffer> {
-
+	
     private static Logger logger = LoggerFactory.getLogger(MQTTSocket.class);
     
     protected Vertx vertx;
@@ -137,22 +137,28 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 session.resetKeepAliveTimer();
 
                 SubscribeMessage subscribeMessage = (SubscribeMessage)msg;
-                session.handleSubscribeMessage(subscribeMessage);
-                SubAckMessage subAck = new SubAckMessage();
-                subAck.setMessageID(subscribeMessage.getMessageID());
-                for(SubscribeMessage.Couple c : subscribeMessage.subscriptions()) {
-                    QOSType qos = new QOSUtils().toQos(c.getQos());
-                    subAck.addType(qos);
-                }
-                if(subscribeMessage.isRetainFlag()) {
-                    /*
-                    When a new subscription is established on a topic,
-                    the last retained message on that topic should be sent to the subscriber with the Retain flag set.
-                    If there is no retained message, nothing is sent
-                    */
-                }
-                sendMessageToClient(subAck);
-                break;
+                session.handleSubscribeMessage(subscribeMessage, permitted -> {
+	                SubAckMessage subAck = new SubAckMessage();
+	                subAck.setMessageID(subscribeMessage.getMessageID());
+	                int indx = 0;
+	                for(SubscribeMessage.Couple c : subscribeMessage.subscriptions()) {
+	                	if (permitted.getBoolean(indx++)) {
+	                		QOSType qos = new QOSUtils().toQos(c.getQos());
+	                		subAck.addType(qos);
+	                	} else {
+	                		subAck.addType(QOSType.FAILURE);
+	                	}
+	                }
+	                if(subscribeMessage.isRetainFlag()) {
+	                    /*
+	                    When a new subscription is established on a topic,
+	                    the last retained message on that topic should be sent to the subscriber with the Retain flag set.
+	                    If there is no retained message, nothing is sent
+	                    */
+	                }
+	                sendMessageToClient(subAck);
+                });
+	            break;
             case UNSUBSCRIBE:
                 session.resetKeepAliveTimer();
 
@@ -168,24 +174,26 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 PublishMessage publish = (PublishMessage)msg;
                 switch (publish.getQos()) {
                     case RESERVED:
-                        session.handlePublishMessage(publish);
+                        session.handlePublishMessage(publish, null);
                         break;
                     case MOST_ONE:
-                        session.handlePublishMessage(publish);
+                        session.handlePublishMessage(publish, null);
                         break;
                     case LEAST_ONE:
 //                        session.addMessageToQueue(publish);
-                        session.handlePublishMessage(publish);
-                        PubAckMessage pubAck = new PubAckMessage();
-                        pubAck.setMessageID(publish.getMessageID());
-                        sendMessageToClient(pubAck);
+                        session.handlePublishMessage(publish, permitted -> {
+	                        PubAckMessage pubAck = new PubAckMessage();
+	                        pubAck.setMessageID(publish.getMessageID());
+	                        sendMessageToClient(pubAck);
+                        });
                         break;
                     case EXACTLY_ONCE:
 //                        session.addMessageToQueue(publish);
-                        session.handlePublishMessage(publish);
-                        PubRecMessage pubRec = new PubRecMessage();
-                        pubRec.setMessageID(publish.getMessageID());
-                        sendMessageToClient(pubRec);
+                        session.handlePublishMessage(publish, permitted -> {
+	                        PubRecMessage pubRec = new PubRecMessage();
+	                        pubRec.setMessageID(publish.getMessageID());
+	                        sendMessageToClient(pubRec);
+                        });
                         break;
                 }
                 break;

@@ -12,3 +12,7 @@ target/
 
 mods/
 .vertx
+*.jar
+*.log
+src/main/resources/vertx-default-jul-logging.properties.unused
+mqtt-spy/
