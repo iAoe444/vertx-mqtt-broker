@@ -1,5 +1,9 @@
-# v 2.2.7
+# v 2.2.8
 - topic based authorization
+
+# v 2.2.7
+- Resolved Out Of Memory: tested with 7000 msg/sec with 10 subscribers for about 2 month
+- Fix null pointer exception during HAClient tests
 
 # v 2.2.6
 - compliance with mqtt paho integration suite for MQTT v 3.1.1 (Support for qos 1 and 2, will message, clean session, etc...)
