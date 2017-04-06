@@ -1,3 +1,6 @@
+# v 2.2.7
+- topic based authorization
+
 # v 2.2.6
 - compliance with mqtt paho integration suite for MQTT v 3.1.1 (Support for qos 1 and 2, will message, clean session, etc...)
 - added a little http server to publish with a POST
