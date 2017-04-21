@@ -3,6 +3,7 @@ package io.github.giovibal.mqtt.rest;
 import io.github.giovibal.mqtt.MQTTSession;
 import io.github.giovibal.mqtt.parser.MQTTEncoder;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServer;
@@ -39,24 +40,36 @@ public class RestApiVerticle extends AbstractVerticle {
         // http://<host:port>/pubsub/publish?channel=&lt;channel1&gt;&qos=0&retained=0
         // qos: MOST_ONE, LEAST_ONE, EXACTLY_ONC
         router.post("/pubsub/publish").handler( req -> {
+            MultiMap headers = req.request().headers();
+            MultiMap params = req.request().params();
             String tenant;
-            if(req.request().headers().contains("tenant")) {
-                tenant = req.request().headers().get("tenant");
+            if(headers.contains("tenant")) {
+                tenant = headers.get("tenant");
             } else {
-                tenant = req.request().params().get("tenant");
+                tenant = params.get("tenant");
             }
-            // TODO: rename "channel" to "topic", and fallback to "channel" for retro compatibility.
-            String channel = req.request().params().get("channel");
+            String topic;
+            if(params.contains("topic")) {
+                topic = req.request().params().get("topic");
+            } else if (params.contains("channel")) {
+                topic = req.request().params().get("channel");
+            } else {
+                throw new IllegalArgumentException("parameter 'topic' is required");
+            }
+
             String qos = req.request().params().get("qos");
             String retained = req.request().params().get("retained");
 
             PublishMessage msg = new PublishMessage();
-            msg.setTopicName(channel);
-            if ( qos != null)
-                msg.setQos(AbstractMessage.QOSType.valueOf(qos));
+            msg.setMessageID(1);
+            msg.setTopicName(topic);
+            if ( qos != null) {
+                AbstractMessage.QOSType theqos =
+                        AbstractMessage.QOSType.valueOf(qos);
+                msg.setQos(theqos);
+            }
             if (retained != null)
                 msg.setRetainFlag(true);
-
 
             try {
                 Buffer body = req.getBody();
