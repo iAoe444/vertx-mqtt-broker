@@ -30,7 +30,6 @@ public class EventBusWebsocketBridge {
     private MessageConsumer<Buffer> consumer;
     private MessageProducer<Buffer> producer;
     private MqttPump fromRemoteTcpToLocalBus;
-//    private Pump fromRemoteTcpToLocalBus;
     private WebSocketWrapper netSocketWrapper;
     private String bridgeUUID;
 
@@ -49,7 +48,6 @@ public class EventBusWebsocketBridge {
         consumer = eventBus.consumer(eventBusAddress);
         producer = eventBus.publisher(eventBusAddress, deliveryOpt);
         fromRemoteTcpToLocalBus = new MqttPump(webSocket, producer);
-//        fromRemoteTcpToLocalBus = Pump.pump(webSocket, producer);
         netSocketWrapper = new MQTTWebSocketWrapper(webSocket);
     }
 

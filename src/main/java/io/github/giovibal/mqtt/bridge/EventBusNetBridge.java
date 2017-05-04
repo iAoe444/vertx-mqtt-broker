@@ -30,7 +30,6 @@ public class EventBusNetBridge {
     private DeliveryOptions deliveryOpt;
     private MessageConsumer<Buffer> consumer;
     private MessageProducer<Buffer> producer;
-//    private MqttPump fromRemoteTcpToLocalBus;
     private Pump fromRemoteTcpToLocalBus;
     private NetSocketWrapper netSocketWrapper;
     private String bridgeUUID;
@@ -50,7 +49,6 @@ public class EventBusNetBridge {
         consumer = eventBus.consumer(eventBusAddress);
         producer = eventBus.publisher(eventBusAddress, deliveryOpt);
         fromRemoteTcpToLocalBus = new MqttPump(netSocket, producer);
-//        fromRemoteTcpToLocalBus = Pump.pump(netSocket, producer);
         netSocketWrapper = new MQTTNetSocketWrapper(netSocket);
     }
 
