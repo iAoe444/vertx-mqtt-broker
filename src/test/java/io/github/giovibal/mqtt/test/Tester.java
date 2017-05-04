@@ -19,7 +19,8 @@ public class Tester {
     public static void main(String[] args) throws Exception {
 
 //        stats("Qos Tests");
-        test2(200, 10, 0, 4000);
+//        test2(200, 10, 0, 4000);
+        test2(20, 10000, 0, 4000);
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 
@@ -63,7 +64,7 @@ public class Tester {
         Tester cPubs = new Tester(numClients, "PUBS", serverURLPublishers);
         cPubs.connect();
 
-        boolean retain = true;
+        boolean retain = false;
         cPubs.publish(numMessagesToPublishPerClient, topic, qos, retain);
         cPubs.disconnect();
 
