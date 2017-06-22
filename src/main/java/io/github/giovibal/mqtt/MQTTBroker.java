@@ -191,10 +191,10 @@ public class MQTTBroker extends AbstractVerticle {
                 .setTcpKeepAlive(true)
                 .setIdleTimeout(idleTimeout) // in seconds; 0 means "don't timeout".
                 .setWebsocketSubProtocols(wsSubProtocols)
-//                .setWebsocketSubProtocol(wsSubProtocols)
                 .setPort(port);
         if(tlsEnabled) {
-            httpOpt.setSsl(true).setPemKeyCertOptions(new PemKeyCertOptions()
+            httpOpt.setSsl(true);
+            httpOpt.setPemKeyCertOptions(new PemKeyCertOptions()
                 .setKeyPath(keyPath)
                 .setCertPath(certPath)
             );
