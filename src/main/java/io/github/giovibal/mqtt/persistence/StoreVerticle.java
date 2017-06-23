@@ -107,7 +107,7 @@ public class StoreVerticle extends AbstractVerticle {
 
     private List<JsonObject> getRetainedMessagesByTopicFilter(String tenant, String topicFilter) {
         List<JsonObject> list = new ArrayList<>();
-        if(tenant != null && tenant.trim().length()>0) {
+        if(tenant != null) {
             Map<String, byte[]> db = db(tenant);
 
             for (String topic : db.keySet()) {
