@@ -14,6 +14,7 @@
         <vertx.version>3.4.1</vertx.version>
         <vertx.scope>provided</vertx.scope>
         <wso2.scope>provided</wso2.scope>
+        <project.deploydir>${project.basedir}/target/deploy/${project.artifactId}</project.deploydir>
     </properties>
 
     <repositories>
@@ -147,7 +148,7 @@
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                 </excludes>
                             </artifactSet>
-                            <outputFile>${project.build.directory}/${artifactId}-${version}-fat.jar</outputFile>
+                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-fat.jar</outputFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -194,7 +195,116 @@
             </dependencies>
         </profile>
 
+        <profile>
+            <id>linux</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.7</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources-linux</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.deploydir}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/main/deploy/common</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <filtering>true</filtering>
+                                        </resource>
 
+                                        <resource>
+                                            <directory>src/main/deploy/linux</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <excludes>
+                                                <exclude>README.md</exclude>
+                                            </excludes>
+                                            <filtering>true</filtering>
+                                        </resource>
+
+                                        <resource>
+                                            <directory>${basedir}/target</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <includes>
+                                                <include>*-fat.jar</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>win64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>2.7</version>
+                        <executions>
+                            <execution>
+                                <id>copy-resources-win64</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.deploydir}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/main/deploy/common</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                        <resource>
+                                            <directory>src/main/deploy/win64</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <excludes>
+                                                <exclude>README.md</exclude>
+                                                <exclude>*.exe</exclude>
+                                            </excludes>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                        <resource>
+                                            <directory>src/main/deploy/win64</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <includes>
+                                                <include>*.exe</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                        <resource>
+                                            <directory>${basedir}/target</directory>
+                                            <includes>
+                                                <include>*-fat.jar</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>win32</id>
             <activation>
@@ -215,7 +325,13 @@
                                     <outputDirectory>${basedir}/target/win32</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>src/main/win32</directory>
+                                            <directory>src/main/deploy/common</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                        <resource>
+                                            <directory>src/main/deploy/win32</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
                                             <excludes>
                                                 <exclude>README.md</exclude>
                                                 <exclude>*.exe</exclude>
@@ -223,7 +339,8 @@
                                             <filtering>true</filtering>
                                         </resource>
                                         <resource>
-                                            <directory>src/main/win32</directory>
+                                            <directory>src/main/deploy/win32</directory>
+                                            <targetPath>${project.deploydir}</targetPath>
                                             <includes>
                                                 <include>*.exe</include>
                                             </includes>
