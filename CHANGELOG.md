@@ -1,3 +1,9 @@
+# v 2.2.10
+- added support for prometheus metrics
+
+# v 2.2.9
+- bugfixing: retain with void or null tenant
+
 # v 2.2.8
 - topic based authorization
 

@@ -2,6 +2,7 @@ package io.github.giovibal.mqtt;
 
 import io.github.giovibal.mqtt.parser.MQTTDecoder;
 import io.github.giovibal.mqtt.parser.MQTTEncoder;
+import io.github.giovibal.mqtt.prometheus.PromMetrics;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -93,11 +94,13 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 ConnectMessage connect = (ConnectMessage)msg;
                 ConnAckMessage connAck = new ConnAckMessage();
                 String connectedClientID = connect.getClientID();
+                PromMetrics.mqtt_connect_total.labels(connectedClientID).inc();
                 if(!connect.isCleanSession() && sessions.containsKey(connectedClientID)) {
                     session = sessions.get(connectedClientID);
                 }
                 if(session == null) {
                     session = new MQTTSession(vertx, config);
+                    PromMetrics.mqtt_sessions_total.inc();
                     connAck.setSessionPresent(false);
                 } else {
                     logger.warn("Session alredy allocated ...");
@@ -137,6 +140,8 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 session.resetKeepAliveTimer();
 
                 SubscribeMessage subscribeMessage = (SubscribeMessage)msg;
+                PromMetrics.mqtt_subscribe_total.labels(session.getClientID()).inc();
+
                 session.handleSubscribeMessage(subscribeMessage, permitted -> {
 	                SubAckMessage subAck = new SubAckMessage();
 	                subAck.setMessageID(subscribeMessage.getMessageID());
@@ -160,6 +165,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 });
 	            break;
             case UNSUBSCRIBE:
+                PromMetrics.mqtt_unsubscribe_total.labels(session.getClientID()).inc();
                 session.resetKeepAliveTimer();
 
                 UnsubscribeMessage unsubscribeMessage = (UnsubscribeMessage)msg;
@@ -172,6 +178,9 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 session.resetKeepAliveTimer();
 
                 PublishMessage publish = (PublishMessage)msg;
+                QOSType qos = publish.getQos();
+                String topic = publish.getTopicName();
+                PromMetrics.mqtt_publish_total.labels(session.getClientID(),qos.name(),topic).inc();
                 switch (publish.getQos()) {
                     case RESERVED:
                         session.handlePublishMessage(publish, null);
@@ -230,6 +239,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 sendMessageToClient(pingResp);
                 break;
             case DISCONNECT:
+                PromMetrics.mqtt_disconnect_total.labels(session.getClientID()).inc();
                 session.resetKeepAliveTimer();
                 DisconnectMessage disconnectMessage = (DisconnectMessage)msg;
                 handleDisconnect(disconnectMessage);

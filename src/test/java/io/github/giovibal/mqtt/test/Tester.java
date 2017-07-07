@@ -20,7 +20,7 @@ public class Tester {
 
 //        stats("Qos Tests");
 //        test2(200, 10, 0, 4000);
-        test2(20, 10000, 0, 4000);
+        test2(200, 10, 0, 4000);
 //        test2(30, 100, 1, 0);
 //        test2(30, 100, 2, 0);
 

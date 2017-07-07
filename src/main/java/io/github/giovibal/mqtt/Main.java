@@ -1,6 +1,7 @@
 package io.github.giovibal.mqtt;
 
 import com.hazelcast.config.*;
+import io.github.giovibal.mqtt.prometheus.PromMetricsExporter;
 import io.github.giovibal.mqtt.rest.RestApiVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -151,6 +152,7 @@ public class Main {
                         Vertx vertx = res.result();
                         vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
                         vertx.deployVerticle(RestApiVerticle.class.getName(), deploymentOptions);
+                        vertx.deployVerticle(PromMetricsExporter.class.getName(), deploymentOptions);
                     } else {
                         // failed!
                         logger.fatal(res.cause().getMessage(), res.cause());
@@ -169,6 +171,7 @@ public class Main {
             Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);
             vertx.deployVerticle(RestApiVerticle.class.getName(), deploymentOptions);
+            vertx.deployVerticle(PromMetricsExporter.class.getName(), deploymentOptions);
         }
 
 
