@@ -120,7 +120,7 @@ public class MQTTBroker extends AbstractVerticle {
                 int size = authenticators.size();
                 for(int i=0; i<size; i++) {
                     JsonObject authConf = authenticators.getJsonObject(i);
-                    deployAuthorizationVerticle(authConf, 1);
+                    deployAuthorizationVerticle(authConf, 5);
                 }
             }
 
