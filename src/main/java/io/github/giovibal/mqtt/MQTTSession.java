@@ -505,6 +505,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
                 if(subscriptions!=null) {
                     subscriptions.remove(topicFilter);
                     matchingSubscriptionsCache.clear();
+                    PromMetrics.mqtt_unsubscribe_total.labels(topicFilter).inc();
                 }
             }
         }

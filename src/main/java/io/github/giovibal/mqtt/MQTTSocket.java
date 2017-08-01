@@ -94,7 +94,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 ConnectMessage connect = (ConnectMessage)msg;
                 ConnAckMessage connAck = new ConnAckMessage();
                 String connectedClientID = connect.getClientID();
-                PromMetrics.mqtt_connect_total.labels(connectedClientID).inc();
+                PromMetrics.mqtt_connect_total.inc();
                 if(!connect.isCleanSession() && sessions.containsKey(connectedClientID)) {
                     session = sessions.get(connectedClientID);
                 }
@@ -140,7 +140,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 session.resetKeepAliveTimer();
 
                 SubscribeMessage subscribeMessage = (SubscribeMessage)msg;
-                PromMetrics.mqtt_subscribe_total.labels(session.getClientID()).inc();
+//                PromMetrics.mqtt_subscribe_total.labels(session.getClientID()).inc();
 
                 session.handleSubscribeMessage(subscribeMessage, permitted -> {
 	                SubAckMessage subAck = new SubAckMessage();
@@ -150,6 +150,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
 	                	if (permitted.getBoolean(indx++)) {
 	                		QOSType qos = new QOSUtils().toQos(c.getQos());
 	                		subAck.addType(qos);
+                            PromMetrics.mqtt_subscribe_total.labels(qos.name(), c.getTopicFilter()).inc();
 	                	} else {
 	                		subAck.addType(QOSType.FAILURE);
 	                	}
@@ -165,7 +166,6 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 });
 	            break;
             case UNSUBSCRIBE:
-                PromMetrics.mqtt_unsubscribe_total.labels(session.getClientID()).inc();
                 session.resetKeepAliveTimer();
 
                 UnsubscribeMessage unsubscribeMessage = (UnsubscribeMessage)msg;
@@ -180,7 +180,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 PublishMessage publish = (PublishMessage)msg;
                 QOSType qos = publish.getQos();
                 String topic = publish.getTopicName();
-                PromMetrics.mqtt_publish_total.labels(session.getClientID(),qos.name(),topic).inc();
+                PromMetrics.mqtt_publish_total.labels(qos.name(),topic).inc();
                 switch (publish.getQos()) {
                     case RESERVED:
                         session.handlePublishMessage(publish, null);
@@ -239,7 +239,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 sendMessageToClient(pingResp);
                 break;
             case DISCONNECT:
-                PromMetrics.mqtt_disconnect_total.labels(session.getClientID()).inc();
+                PromMetrics.mqtt_disconnect_total.inc();
                 session.resetKeepAliveTimer();
                 DisconnectMessage disconnectMessage = (DisconnectMessage)msg;
                 handleDisconnect(disconnectMessage);
