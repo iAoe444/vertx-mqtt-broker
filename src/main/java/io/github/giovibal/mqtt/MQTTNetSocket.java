@@ -1,5 +1,6 @@
 package io.github.giovibal.mqtt;
 
+import io.github.giovibal.mqtt.prometheus.PromMetrics;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
@@ -23,7 +24,6 @@ public class MQTTNetSocket extends MQTTSocket {
     }
 
     public void start() {
-//        netSocket.setWriteQueueMaxSize(1000);
         netSocket.handler(this);
         netSocket.exceptionHandler(event -> {
             String clientInfo = getClientInfo();
@@ -37,20 +37,15 @@ public class MQTTNetSocket extends MQTTSocket {
             handleWillMessage();
             shutdown();
         });
+        vertx.setPeriodic(1000, event -> {
+            PromMetrics.mqtt_sessions.set(sessions.size());
+        });
     }
 
 
     @Override
     protected void sendMessageToClient(Buffer bytes) {
-        try {
-            netSocket.write(bytes);
-            if (netSocket.writeQueueFull()) {
-                netSocket.pause();
-                netSocket.drainHandler( done -> netSocket.resume() );
-            }
-        } catch(Throwable e) {
-            logger.error(e.getMessage());
-        }
+        sendMessageToClient(bytes, netSocket, netSocket);
     }
 
     protected void closeConnection() {

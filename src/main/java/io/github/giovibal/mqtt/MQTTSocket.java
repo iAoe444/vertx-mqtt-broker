@@ -8,6 +8,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.streams.ReadStream;
+import io.vertx.core.streams.WriteStream;
 import org.dna.mqtt.moquette.proto.messages.*;
 
 import java.util.Map;
@@ -28,7 +30,7 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
     private MQTTPacketTokenizer tokenizer;
     protected MQTTSession session;
     private ConfigParser config;
-    private Map<String, MQTTSession> sessions;
+    protected Map<String, MQTTSession> sessions;
 
     public MQTTSocket(Vertx vertx, ConfigParser config, Map<String, MQTTSession> sessions) {
         this.decoder = new MQTTDecoder();
@@ -41,7 +43,19 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
     }
 
     abstract protected void sendMessageToClient(Buffer bytes);
+    protected void sendMessageToClient(Buffer bytes, WriteStream<Buffer> writer, ReadStream<Buffer> reader) {
+        try {
+            writer.write(bytes);
+            if (writer.writeQueueFull()) {
+                reader.pause();
+                writer.drainHandler( done -> reader.resume() );
+            }
+        } catch(Throwable e) {
+            logger.error(e.getMessage());
+        }
+    }
     abstract protected void closeConnection();
+
 
     public void shutdown() {
         if(tokenizer!=null) {
@@ -111,6 +125,8 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
 //                    closeConnection();
 //                    break;
                 }
+
+
                 session.setPublishMessageHandler(this::sendMessageToClient);
                 session.setKeepaliveErrorHandler(clientID -> {
                     String cinfo = clientID;
@@ -150,7 +166,8 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
 	                	if (permitted.getBoolean(indx++)) {
 	                		QOSType qos = new QOSUtils().toQos(c.getQos());
 	                		subAck.addType(qos);
-                            PromMetrics.mqtt_subscribe_total.labels(qos.name(), c.getTopicFilter()).inc();
+                            PromMetrics.mqtt_subscribe_total.inc();
+                            PromMetrics.mqtt_subscribe.labels(qos.name(), c.getTopicFilter()).inc();
 	                	} else {
 	                		subAck.addType(QOSType.FAILURE);
 	                	}
@@ -180,7 +197,8 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
                 PublishMessage publish = (PublishMessage)msg;
                 QOSType qos = publish.getQos();
                 String topic = publish.getTopicName();
-                PromMetrics.mqtt_publish_total.labels(qos.name(),topic).inc();
+                PromMetrics.mqtt_publish_total.inc();
+                PromMetrics.mqtt_publish.labels(qos.name(),topic).inc();
                 switch (publish.getQos()) {
                     case RESERVED:
                         session.handlePublishMessage(publish, null);
