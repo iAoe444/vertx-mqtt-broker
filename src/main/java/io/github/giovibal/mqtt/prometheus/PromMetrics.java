@@ -49,6 +49,6 @@ public class PromMetrics {
                     .register();
 
     public static final Gauge mqtt_sessions =
-            Gauge.build().name("mqtt_sessions_total").help("Active mqtt sessions.")
+            Gauge.build().name("mqtt_sessions").help("Active mqtt sessions.")
                     .register();
 }

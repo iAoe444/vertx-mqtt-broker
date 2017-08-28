@@ -37,6 +37,7 @@ public class MQTTWebSocket extends MQTTSocket {
             shutdown();
         });
         vertx.setPeriodic(1000, event -> {
+            PromMetrics.mqtt_sessions.setToCurrentTime();
             PromMetrics.mqtt_sessions.set(sessions.size());
         });
     }
