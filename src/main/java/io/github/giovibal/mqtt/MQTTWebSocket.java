@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt;
 
-import io.github.giovibal.mqtt.prometheus.PromMetrics;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ServerWebSocket;
@@ -35,10 +34,6 @@ public class MQTTWebSocket extends MQTTSocket {
             String clientInfo = getClientInfo();
             logger.info(clientInfo + ", web-socket closed ... "+ netSocket.binaryHandlerID() +" "+ netSocket.textHandlerID());
             shutdown();
-        });
-        vertx.setPeriodic(1000, event -> {
-            PromMetrics.mqtt_sessions.setToCurrentTime();
-            PromMetrics.mqtt_sessions.set(sessions.size());
         });
     }
 

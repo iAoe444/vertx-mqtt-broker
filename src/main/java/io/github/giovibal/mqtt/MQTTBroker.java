@@ -5,6 +5,7 @@ import io.github.giovibal.mqtt.bridge.EventBusBridgeServerVerticle;
 import io.github.giovibal.mqtt.bridge.EventBusBridgeWebsocketClientVerticle;
 import io.github.giovibal.mqtt.bridge.EventBusBridgeWebsocketServerVerticle;
 import io.github.giovibal.mqtt.persistence.StoreVerticle;
+import io.github.giovibal.mqtt.prometheus.MonitoredMap;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.HttpServer;
@@ -17,7 +18,6 @@ import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -172,7 +172,7 @@ public class MQTTBroker extends AbstractVerticle {
             );
         }
         NetServer netServer = vertx.createNetServer(opt);
-        Map<String, MQTTSession> sessions = new HashMap<>();
+        Map<String, MQTTSession> sessions = new MonitoredMap<>();
         netServer.connectHandler(netSocket -> {
             MQTTNetSocket mqttNetSocket = new MQTTNetSocket(vertx, c, netSocket, sessions);
             mqttNetSocket.start();
@@ -200,10 +200,11 @@ public class MQTTBroker extends AbstractVerticle {
             );
         }
         HttpServer http = vertx.createHttpServer(httpOpt);
-        Map<String, MQTTSession> sessions = new HashMap<>();
+        Map<String, MQTTSession> sessions = new MonitoredMap<>();
         http.websocketHandler(serverWebSocket -> {
             MQTTWebSocket mqttWebSocket = new MQTTWebSocket(vertx, c, serverWebSocket, sessions);
             mqttWebSocket.start();
         }).listen();
     }
+
 }

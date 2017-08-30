@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt;
 
-import io.github.giovibal.mqtt.prometheus.PromMetrics;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
@@ -36,10 +35,6 @@ public class MQTTNetSocket extends MQTTSocket {
             logger.info(clientInfo + ", net-socket closed ... " + netSocket.writeHandlerID());
             handleWillMessage();
             shutdown();
-        });
-        vertx.setPeriodic(1000, event -> {
-            PromMetrics.mqtt_sessions.setToCurrentTime();
-            PromMetrics.mqtt_sessions.set(sessions.size());
         });
     }
 
