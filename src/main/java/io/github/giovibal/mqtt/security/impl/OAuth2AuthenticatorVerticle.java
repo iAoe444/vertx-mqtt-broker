@@ -37,35 +37,47 @@ public class OAuth2AuthenticatorVerticle extends AuthenticatorVerticle {
             String usernameOrAccessToken = oauth2_token.getString("username");
             String passwordOrRefreshToken = oauth2_token.getString("password");
             // token validation
-            JsonObject json = new JsonObject();
-            Boolean tokanIsValid = Boolean.FALSE;
+//            JsonObject json = new JsonObject();
+//            Boolean tokanIsValid = Boolean.FALSE;
             try {
-                if(usernameOrAccessToken.contains("@")) {
-//                    Future<AuthorizationClient.ValidationInfo> f = Future.future();
-                    Future<AuthorizationClient.ValidationInfo> f = performLoginRequest(identityURL,
-                                                                                       usernameOrAccessToken,
-                                                                                       passwordOrRefreshToken,
-                                                                                       app_key,
-                                                                                       app_secret);
-                    f.setHandler(event -> {
-                        AuthorizationClient.ValidationInfo vi = event.result();
-                        msg.reply(vi.toJson());
-                    });
-                } else {
-                    tokanIsValid = oauth2Validator.tokenIsValid(usernameOrAccessToken);
-                    TokenInfo info = oauth2Validator.getTokenInfo(usernameOrAccessToken);
-                    AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-                    vi.auth_valid = tokanIsValid;
-                    vi.authorized_user = info.getAuthorizedUser();
-                    vi.error_msg = info.getErrorMsg();
+                if(usernameOrAccessToken!=null) {
+                    if (usernameOrAccessToken.contains("@")) {
+                        Future<AuthorizationClient.ValidationInfo> f = performLoginRequest(identityURL,
+                                usernameOrAccessToken,
+                                passwordOrRefreshToken,
+                                app_key,
+                                app_secret);
+                        f.setHandler(event -> {
+                            AuthorizationClient.ValidationInfo vi = event.result();
+                            msg.reply(vi.toJson());
+                        });
+                    } else {
+                        Boolean tokenIsValid = oauth2Validator.tokenIsValid(usernameOrAccessToken);
+                        TokenInfo info = oauth2Validator.getTokenInfo(usernameOrAccessToken);
+                        AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
+                        vi.auth_valid = tokenIsValid;
+                        vi.authorized_user = info.getAuthorizedUser();
+                        vi.error_msg = info.getErrorMsg();
 
-                    json = vi.toJson();
-                    json.put("scope", info.getScope());
-                    json.put("expiry_time", info.getExpiryTime());
+                        JsonObject json = vi.toJson();
+                        json.put("scope", info.getScope());
+                        json.put("expiry_time", info.getExpiryTime());
+                        msg.reply(json);
+                    }
+                }
+                else {
+                    logger.warn("Username null, cannot authenticate");
+                    JsonObject json = new JsonObject();
+                    json.put("auth_valid", Boolean.FALSE);
+                    json.put("error_msg", "Invalid Username or Password");
                     msg.reply(json);
                 }
             } catch (Exception e) {
                 logger.fatal(e.getMessage(), e);
+                JsonObject json = new JsonObject();
+                json.put("auth_valid", Boolean.FALSE);
+                json.put("error_msg", e.getMessage());
+                msg.reply(json);
             }
         });
 

@@ -1,3 +1,12 @@
+# v 2.2.12
+- updated vert.x dependencies to v3.5.0
+- better handling of auth with null username
+- debug of auth with user/pass using wso2 as identity provider
+
+# v 2.2.11
+- added better support of sessions with prometheus metrics
+- changed default auth verticle instances from 1 to 5
+
 # v 2.2.10
 - added support for prometheus metrics
 
