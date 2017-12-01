@@ -41,12 +41,16 @@ public class OAuth2AuthenticatorVerticle extends AuthenticatorVerticle {
             Boolean tokanIsValid = Boolean.FALSE;
             try {
                 if(usernameOrAccessToken.contains("@")) {
-                    Future<AuthorizationClient.ValidationInfo> f = Future.future();
+//                    Future<AuthorizationClient.ValidationInfo> f = Future.future();
+                    Future<AuthorizationClient.ValidationInfo> f = performLoginRequest(identityURL,
+                                                                                       usernameOrAccessToken,
+                                                                                       passwordOrRefreshToken,
+                                                                                       app_key,
+                                                                                       app_secret);
                     f.setHandler(event -> {
                         AuthorizationClient.ValidationInfo vi = event.result();
                         msg.reply(vi.toJson());
                     });
-                    performLoginRequest(f, identityURL, usernameOrAccessToken, passwordOrRefreshToken, app_key, app_secret);
                 } else {
                     tokanIsValid = oauth2Validator.tokenIsValid(usernameOrAccessToken);
                     TokenInfo info = oauth2Validator.getTokenInfo(usernameOrAccessToken);
@@ -69,13 +73,13 @@ public class OAuth2AuthenticatorVerticle extends AuthenticatorVerticle {
     }
 
 
-    private void performLoginRequest(Future<AuthorizationClient.ValidationInfo> f
-            , String identityURL
-            , String username
-            , String password
-            , String app_key
-            , String app_secret
+    private Future<AuthorizationClient.ValidationInfo> performLoginRequest(String identityURL,
+                                     String username,
+                                     String password,
+                                     String app_key,
+                                     String app_secret
     ) throws MalformedURLException {
+        Future<AuthorizationClient.ValidationInfo> f = Future.future();
         HttpClientOptions opt = new HttpClientOptions();
         HttpClient httpClient = vertx.createHttpClient(opt);
         URL url = new URL(identityURL + "/oauth2/token");
@@ -143,5 +147,6 @@ public class OAuth2AuthenticatorVerticle extends AuthenticatorVerticle {
         loginReq.putHeader("Authorization", "Basic "+base64keysecret);
         String data = "grant_type=password&username=" + username + "&password=" + password + "";
         loginReq.end(data, "UTF-8");
+        return f;
     }
 }
