@@ -204,6 +204,13 @@ public class MQTTBroker extends AbstractVerticle {
         http.websocketHandler(serverWebSocket -> {
             MQTTWebSocket mqttWebSocket = new MQTTWebSocket(vertx, c, serverWebSocket, sessions);
             mqttWebSocket.start();
+        }).requestHandler(event -> {
+            JsonObject json = new JsonObject()
+                    .put("status","ok")
+                    .put("service","mqtt+websocket")
+                    .put("uri",event.absoluteURI())
+                    ;
+            event.response().end(json.encode());
         }).listen();
     }
 
