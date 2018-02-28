@@ -6,12 +6,12 @@
     <groupId>io.github.giovibal.mqtt</groupId>
     <artifactId>vertx-mqtt-broker</artifactId>
     <packaging>jar</packaging>
-    <version>2.2.12</version>
+    <version>2.2.13</version>
     <name>MQTT Broker based on Vert.x</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertx.version>3.5.0</vertx.version>
+        <vertx.version>3.5.1</vertx.version>
         <vertx.scope>provided</vertx.scope>
         <wso2.scope>provided</wso2.scope>
         <project.deploydir>${project.basedir}/target/deploy/${project.artifactId}</project.deploydir>

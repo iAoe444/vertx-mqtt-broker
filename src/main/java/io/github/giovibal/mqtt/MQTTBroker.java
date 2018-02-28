@@ -199,6 +199,9 @@ public class MQTTBroker extends AbstractVerticle {
                 .setCertPath(certPath)
             );
         }
+        httpOpt.setMaxWebsocketFrameSize(268_435_456);
+        httpOpt.setMaxWebsocketMessageSize(268_435_456);
+
         HttpServer http = vertx.createHttpServer(httpOpt);
         Map<String, MQTTSession> sessions = new MonitoredMap<>();
         http.websocketHandler(serverWebSocket -> {
