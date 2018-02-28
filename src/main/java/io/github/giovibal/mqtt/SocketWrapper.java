@@ -40,6 +40,10 @@ public class SocketWrapper {
 
     public void stop() {
         // stop writing to socket
-        w.drainHandler(null);
+        try {
+            w.drainHandler(null);
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 }

@@ -11,6 +11,7 @@ import io.vertx.core.http.WebSocketBase;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.parsetools.RecordParser;
+import io.vertx.core.streams.WriteStream;
 
 import java.util.UUID;
 
@@ -30,7 +31,8 @@ public class EventBusWebsocketBridge {
     private MessageConsumer<Buffer> consumer;
     private MessageProducer<Buffer> producer;
     private MqttPump fromRemoteTcpToLocalBus;
-    private WebSocketWrapper netSocketWrapper;
+    private MqttPump fromLocalBusToRemoteTcp;
+//    private WebSocketWrapper netSocketWrapper;
     private String bridgeUUID;
 
     public EventBusWebsocketBridge(WebSocketBase webSocket, EventBus eventBus, String eventBusAddress) {
@@ -48,7 +50,12 @@ public class EventBusWebsocketBridge {
         consumer = eventBus.consumer(eventBusAddress);
         producer = eventBus.publisher(eventBusAddress, deliveryOpt);
         fromRemoteTcpToLocalBus = new MqttPump(webSocket, producer);
-        netSocketWrapper = new MQTTWebSocketWrapper(webSocket);
+        BodyReadStreamWithFilter<Buffer> consumerFiltered =
+                new BodyReadStreamWithFilter<>(
+                        consumer,
+                        bufferMessage -> !isBridged(bufferMessage) && tenantMatch(bufferMessage));
+        fromLocalBusToRemoteTcp = new MqttPump(consumerFiltered, webSocket);
+//        netSocketWrapper = new MQTTWebSocketWrapper(webSocket);
     }
 
     public void start() {
@@ -57,22 +64,27 @@ public class EventBusWebsocketBridge {
         consumer.pause();
         // from remote tcp to local bus
         fromRemoteTcpToLocalBus.start();
-
         // from local bus to remote tcp
-        consumer.handler(bufferMessage -> {
-            boolean isBridged = bufferMessage.headers() != null
-                    && bufferMessage.headers().contains(BR_HEADER)
-                    && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
-                    ;
-            if (!isBridged) {
-                boolean tenantMatch = tenantMatch(bufferMessage);
-                if(tenantMatch) {
-                    netSocketWrapper.sendMessageToClient(bufferMessage.body());
-                }
-            }
-        });
+        fromLocalBusToRemoteTcp.start();
+//        consumer.handler(bufferMessage -> {
+//            boolean isBridged = isBridged(bufferMessage);
+//            if (!isBridged) {
+//                boolean tenantMatch = tenantMatch(bufferMessage);
+//                if(tenantMatch) {
+//                    netSocketWrapper.sendMessageToClient(bufferMessage.body());
+//                }
+//            }
+//        });
         consumer.resume();
         webSocket.resume();
+    }
+
+    private boolean isBridged(Message<Buffer> bufferMessage) {
+        boolean isBridged = bufferMessage.headers() != null
+                && bufferMessage.headers().contains(BR_HEADER)
+                && bufferMessage.headers().get(BR_HEADER).equals(bridgeUUID)
+                ;
+        return isBridged;
     }
 
     // TODO: this method is equal to MQTTSession.isTenantSession, need refactoring
@@ -108,10 +120,11 @@ public class EventBusWebsocketBridge {
 
     public void stop() {
 //        // from remote tcp to local bus
-//        fromRemoteTcpToLocalBus.stop();
+        fromRemoteTcpToLocalBus.stop();
 //        // from local bus to remote tcp
 //        netSocketWrapper.stop();// stop write to remote tcp socket
-        consumer.handler(null);// stop read from bus
+//        consumer.handler(null);// stop read from bus
+        fromLocalBusToRemoteTcp.stop();
     }
 
 
@@ -132,7 +145,7 @@ public class EventBusWebsocketBridge {
         ServerWebSocket sock = (ServerWebSocket)webSocket;
         final RecordParser parser = RecordParser.newDelimited("\n", h -> {
             String cmd = h.toString();
-            if ("START SESSION".equalsIgnoreCase(cmd)) {
+            if("START SESSION".equalsIgnoreCase(cmd)) {
                 sock.pause();
                 start();
                 logger.info("Bridge Server - start session with " +
@@ -144,7 +157,7 @@ public class EventBusWebsocketBridge {
             } else {
                 String tenant = cmd;
                 String tenantFromCert = new CertInfo(sock).getTenant();
-                if (tenantFromCert != null)
+                if(tenantFromCert != null)
                     tenant = tenantFromCert;
 
                 setTenant(tenant);

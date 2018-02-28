@@ -52,7 +52,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
 
         createClient();
         connect();
-        netClient.websocket(remoteBridgePort, remoteBridgeHost, remoteBridgePath, this);
+
         connectionTimerID = vertx.setPeriodic(connectTimeout*2, aLong -> {
             checkConnection();
         });
@@ -75,7 +75,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
                     .addCertPath(ssl_trust)
                 )
             ;
-//            tenant = new CertInfo(ssl_cert).getTenant();
+            tenant = new CertInfo(ssl_cert).getTenant();
         }
 
         netClient = vertx.createHttpClient(opt);

@@ -62,6 +62,7 @@ public class EventBusBridgeWebsocketServerVerticle extends AbstractVerticle {
         }
 
         netServer = vertx.createHttpServer(opt);
+        netServer.requestHandler(httpServerRequest -> httpServerRequest.response().end() );
         netServer.websocketHandler(sock -> {
             final EventBusWebsocketBridge ebnb = new EventBusWebsocketBridge(sock, vertx.eventBus(), address);
             sock.closeHandler(aVoid -> {
