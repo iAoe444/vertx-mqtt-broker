@@ -120,11 +120,19 @@ public class EventBusWebsocketBridge {
 
     public void stop() {
 //        // from remote tcp to local bus
-        fromRemoteTcpToLocalBus.stop();
+        try {
+            fromRemoteTcpToLocalBus.stop();
+        } catch (Throwable e) {
+            logger.warn(e.getMessage(), e);
+        }
 //        // from local bus to remote tcp
 //        netSocketWrapper.stop();// stop write to remote tcp socket
 //        consumer.handler(null);// stop read from bus
-        fromLocalBusToRemoteTcp.stop();
+        try {
+            fromLocalBusToRemoteTcp.stop();
+        } catch (Throwable e) {
+            logger.warn(e.getMessage(), e);
+        }
     }
 
 

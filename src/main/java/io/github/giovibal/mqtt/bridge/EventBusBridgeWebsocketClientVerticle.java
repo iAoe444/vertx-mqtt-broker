@@ -30,6 +30,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
     private boolean connecting;
     private String tenant;
     private int idleTimeout;
+    private boolean ssl_enabled;
     private String ssl_cert_key;
     private String ssl_cert;
     private String ssl_trust;
@@ -45,6 +46,7 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
         remoteBridgePath = conf.getString("remote_bridge_path", "/");
         tenant = conf.getString("remote_bridge_tenant");
         idleTimeout = conf.getInteger("socket_idle_timeout", 120);
+        ssl_enabled = conf.getBoolean("ssl_enabled", false);
         ssl_cert_key = conf.getString("ssl_cert_key");
         ssl_cert = conf.getString("ssl_cert");
         ssl_trust = conf.getString("ssl_trust");
@@ -64,6 +66,10 @@ public class EventBusBridgeWebsocketClientVerticle extends AbstractVerticle impl
                 .setTcpKeepAlive(true)
                 .setIdleTimeout(idleTimeout)
                 ;
+
+        if(ssl_enabled) {
+            opt.setSsl(true);
+        }
 
         if(ssl_cert_key != null && ssl_cert != null && ssl_trust != null) {
             opt.setSsl(true)
