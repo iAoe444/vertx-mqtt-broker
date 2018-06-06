@@ -11,10 +11,7 @@
       "address": "mqtt.authenticator.oauth2.keycloak",
       "verticle": "io.github.giovibal.mqtt.security.impl.JWTAuthenticatorVerticle",
       "security": {
-        "authorized_clients": ["testing.*","persistor."],
-        "idp_url": "https://idptest.smartplatform.io/auth/realms/eniform/protocol/openid-connect/token",
-        "app_key": "nodejs-test",
-        "app_secret": "fc4d769d-5edf-45b6-a0c2-eb1b2f9c8d7e"
+        "authorized_clients": ["testing.*","persistor."]
       }
     }
   ]

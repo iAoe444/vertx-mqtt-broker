@@ -29,10 +29,13 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 //        String app_key = c.getAppKey();
 //        String app_secret = c.getAppSecret();
 
-        String identityURL = getEnv("idp.url", c.getIdpUrl());
-        String app_key = getEnv("client.id", c.getAppKey());
-        String app_secret = getEnv("client.secret", c.getAppSecret());
-        String jwtPubKey = getEnv("jwt.pubkey", null);
+        System.out.println( System.getenv() );
+
+
+        String identityURL = getEnv("IDP_URL", c.getIdpUrl());
+        String app_key = getEnv("CLIENT_ID", c.getAppKey());
+        String app_secret = getEnv("CLIENT_SECRET", c.getAppSecret());
+        String jwtPubKey = getEnv("JWT_PUB_KEY", null);
 
         JWTAuthOptions config = new JWTAuthOptions()
                 .addPubSecKey(new PubSecKeyOptions()
