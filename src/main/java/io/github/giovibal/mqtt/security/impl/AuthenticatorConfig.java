@@ -17,6 +17,7 @@ public class AuthenticatorConfig {
     private String idpPassword;
     private String appKey;
     private String appSecret;
+    private String jwtPubKey;
 
     public AuthenticatorConfig(JsonObject conf) {
         parse(conf);
@@ -36,6 +37,7 @@ public class AuthenticatorConfig {
         idpPassword = security.getString("idp_password", "admin");
         appKey = security.getString("app_key", "a");
         appSecret = security.getString("app_secret", "12345");
+        jwtPubKey = security.getString("jwtPubKey", null);
     }
 
     public List<String> getAuthorizedClients() {
@@ -60,6 +62,10 @@ public class AuthenticatorConfig {
 
     public String getAppSecret() {
         return appSecret;
+    }
+
+    public String getJwtPubKey() {
+        return jwtPubKey;
     }
 
     public boolean isAuthorizedClient(String clientID) {
