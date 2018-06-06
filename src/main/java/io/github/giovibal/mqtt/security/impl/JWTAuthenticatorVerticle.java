@@ -47,57 +47,10 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
             try {
                 HttpClientOptions opt = new HttpClientOptions();
                 HttpClient httpClient = vertx.createHttpClient(opt);
-//                URL url = new URL(identityURL);
 
                 String accessToken = username;
 
-//                HttpClientRequest loginReq = httpClient.postAbs(identityURL, resp -> {
-//                    resp.exceptionHandler(e -> {
-//                        logger.fatal(e.getMessage(), e);
-//
-//                        AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-//                        vi.auth_valid = false;
-//                        vi.authorized_user = "";
-//                        vi.error_msg = e.getMessage();
-//                        msg.reply(vi.toJson());
-//                    });
-//                    resp.bodyHandler(totalBuffer -> {
-//                        String jsonResponse = totalBuffer.toString("UTF-8");
-//                        logger.info(jsonResponse);
-//                        JsonObject j = new JsonObject(jsonResponse);
-//                        String new_access_token = j.getString("access_token");
-//                        Long expires_in = j.getLong("expires_in");
-//                        String scope = j.getString("scope");
-//                        String error = j.getString("error");
-//
-//                        AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-//                        if(new_access_token != null && new_access_token.trim().length()>0) {
-//                            vi.auth_valid = true;
-//                            vi.authorized_user = username;
-//                        } else {
-//                            vi.auth_valid = false;
-//                            vi.error_msg = error;
-//                        }
-//
-//                        JsonObject json = vi.toJson();
-//                        json.put("scope", scope);
-//                        json.put("expiry_time", expires_in);
-//
-//                        msg.reply(json);
-//                    });
-//                });
-
                 if(username!=null && username.contains("@")) {
-//                    String data = "grant_type=password"
-//                            + "&username=" + username
-//                            + "&password=" + password
-////                            + "&scope=sp"
-//                            + "&client_id=" + app_key
-//                            + "&client_secret=" + app_secret
-//                            + "";
-//
-//                    loginReq.putHeader("Content-Type", "application/x-www-form-urlencoded");
-//                    loginReq.end(data, "UTF-8");
                     login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
                         if(loginEvt.failed()) {
                             AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
