@@ -15,7 +15,7 @@ import io.vertx.ext.auth.jwt.JWTAuthOptions;
 
 public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
-    private String getEnv(String envName, String defaultVal) {
+    private static String getEnv(String envName, String defaultVal) {
         String val = System.getenv().getOrDefault(envName, defaultVal);
         if(val == null)
             throw new IllegalArgumentException("Missing '"+envName+"' env var !");
