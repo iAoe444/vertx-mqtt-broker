@@ -12,10 +12,9 @@
       "verticle": "io.github.giovibal.mqtt.security.impl.JWTAuthenticatorVerticle",
       "security": {
         "authorized_clients": ["testing.*","persistor."],
-        "idp_url": "https://idp.smartplatform.io/auth/realms/master/protocol/openid-connect/token",
+        "idp_url": "https://idptest.smartplatform.io/auth/realms/eniform/protocol/openid-connect/token",
         "app_key": "nodejs-test",
-        "app_secret": "fc4d769d-5edf-45b6-a0c2-eb1b2f9c8d7e",
-        "jwtPubKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAldBel/cTujdhF9mwfne77MB1zMWKJYur/qu1iubluhUajoJVLCIjBH08nqc/1A99H+LNG9QHkxacBBBi3DpVNxQxjx0EecX9KLGWn42qUCeXuyE+dkEwrTOTDdi8L3EWTYTp2dCXi8LYktr4GnL6KMiyDZZBC9lFM/1Jfa3GMEl6OQ9lYXtb4Sbj1lvHXG69kj2tdDronW/k4pfYbLSp4J7VugABgqDl0oqRoLrH9zhqhY5qrSPDmKg1qIq9D3ucoIQWTxnqPJ1N8RGvnIWk+oPXKDr+cmrT+WMr6pjL9oJ5yVIrQ9bSYikAmFFcH2A1h4NwDubS+U/o9oEC6ScNlwIDAQAB"
+        "app_secret": "fc4d769d-5edf-45b6-a0c2-eb1b2f9c8d7e"
       }
     }
   ]

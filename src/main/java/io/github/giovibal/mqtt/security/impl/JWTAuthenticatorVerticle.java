@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt.security.impl;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.github.giovibal.mqtt.security.AuthorizationClient;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
@@ -14,19 +13,26 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 
-import java.net.URL;
-
 public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
-    private JWTAuth jwtAuth;
+
+    private String getEnv(String envName, String defaultVal) {
+        String val = System.getenv().getOrDefault(envName, defaultVal);
+        if(val == null)
+            throw new IllegalArgumentException("Missing '"+envName+"' env var !");
+        return val;
+    }
 
     @Override
     public void startAuthenticator(String address, AuthenticatorConfig c) throws Exception {
 
+//        String identityURL = c.getIdpUrl();
+//        String app_key = c.getAppKey();
+//        String app_secret = c.getAppSecret();
 
-        String identityURL = c.getIdpUrl();
-        String app_key = c.getAppKey();
-        String app_secret = c.getAppSecret();
-        String jwtPubKey = c.getJwtPubKey();
+        String identityURL = getEnv("idp.url", c.getIdpUrl());
+        String app_key = getEnv("client.id", c.getAppKey());
+        String app_secret = getEnv("client.secret", c.getAppSecret());
+        String jwtPubKey = getEnv("jwt.pubkey", null);
 
         JWTAuthOptions config = new JWTAuthOptions()
                 .addPubSecKey(new PubSecKeyOptions()
@@ -36,7 +42,6 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 ;
 
         JWTAuth jwtAuth = JWTAuth.create(vertx, config);
-
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer(address, (Message<JsonObject> msg) -> {
             JsonObject oauth2_token = msg.body();
