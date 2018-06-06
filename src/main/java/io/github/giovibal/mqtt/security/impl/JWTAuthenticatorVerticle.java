@@ -24,14 +24,6 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
     @Override
     public void startAuthenticator(String address, AuthenticatorConfig c) throws Exception {
-
-//        String identityURL = c.getIdpUrl();
-//        String app_key = c.getAppKey();
-//        String app_secret = c.getAppSecret();
-
-        System.out.println( System.getenv() );
-
-
         String identityURL = getEnv("IDP_URL", c.getIdpUrl());
         String app_key = getEnv("CLIENT_ID", c.getAppKey());
         String app_secret = getEnv("CLIENT_SECRET", c.getAppSecret());
