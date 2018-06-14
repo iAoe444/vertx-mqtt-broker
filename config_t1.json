@@ -2,17 +2,15 @@
   "brokers": [
     {
       "tcp_port": 1883,
-      "socket_idle_timeout": 120,
-      "authenticator_address": "mqtt.authenticator.oauth2.keycloak"
+      "socket_idle_timeout": 120
     }
   ],
-  "authenticators": [
-    {
-      "address": "mqtt.authenticator.oauth2.keycloak",
-      "verticle": "io.github.giovibal.mqtt.security.impl.JWTAuthenticatorVerticle",
-      "security": {
-        "authorized_clients": ["testing.*","persistor."]
-      }
-    }
-  ]
+  "bridge_client": {
+    "websocket_enabled": true,
+    "remote_bridge_host": "enitest.smartplatform.io",
+    "remote_bridge_port": 443,
+    "ssl_enabled": true,
+    "remote_bridge_path": "/bridge",
+    "remote_bridge_tenant": "ferrera.eni.com"
+  }
 }

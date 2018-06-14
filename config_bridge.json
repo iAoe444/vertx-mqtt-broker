@@ -6,9 +6,10 @@
     }
   ],
   "bridge_client": {
-    "websocket_enabled": false,
-    "remote_bridge_host": "127.0.1.1",
-    "remote_bridge_port": 7007,
+    "websocket_enabled": true,
+    "remote_bridge_host": "dev.smartplatform.io",
+    "remote_bridge_port": 443,
+    "remote_bridge_path": "/bridge",
     "remote_bridge_tenant": "demo.it"
   }
 }
