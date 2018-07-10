@@ -1,0 +1,32 @@
+image: docker:stable
+
+variables:
+  DOCKER_DRIVER: overlay2
+  COMPONENT_VERSION: $CI_COMMIT_TAG
+  COMPONENT_NAME: "mqtt-broker"
+
+services:
+- docker:dind
+
+stages:
+  - build
+  - package
+
+maven-build:
+  image: maven:3-jdk-8
+  stage: build
+  script: "mvn -DskipTests package -B"
+  artifacts:
+    paths:
+      - target/*.jar
+  only:
+    - tags
+
+build:
+  stage: package
+  script:
+  - docker build . -t $DOCKER_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION -f Dockerfile
+  - docker login -u $RESGISTRY_USER -p $RESGISTRY_PASS $DOCKER_REGISTRY
+  - docker push $DOCKER_REGISTRY/$COMPONENT_NAME:$COMPONENT_VERSION
+  only:
+    - tags
