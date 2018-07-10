@@ -1,3 +1,9 @@
+# v 2.2.14
+- JWT auth support 
+
+# v 2.2.13
+- bug fixing
+
 # v 2.2.12
 - updated vert.x dependencies to v3.5.0
 - better handling of auth with null username
