@@ -7,11 +7,15 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import org.apache.axis2.json.gson.JsonBuilder;
+
+import java.util.Set;
 
 public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
@@ -28,13 +32,27 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         String app_key = getEnv("CLIENT_ID", c.getAppKey());
         String app_secret = getEnv("CLIENT_SECRET", c.getAppSecret());
         String jwtPubKey = getEnv("JWT_PUB_KEY", null);
+        String jwtPubKeys = getEnv("JWT_PUB_KEYS", null);
 
-        JWTAuthOptions config = new JWTAuthOptions()
-                .addPubSecKey(new PubSecKeyOptions()
+        JWTAuthOptions config = new JWTAuthOptions();
+
+        if(jwtPubKey!=null) {
+            config.addPubSecKey(new PubSecKeyOptions()
+                    .setAlgorithm("RS256")
+                    .setPublicKey(jwtPubKey)
+            );
+        }
+        if(jwtPubKeys!=null) {
+            JsonObject jwtPubKeysJson = new JsonObject(jwtPubKeys);
+            Set<String> kids = jwtPubKeysJson.fieldNames();
+            for(String kid : kids) {
+                String _jwtPubKey = jwtPubKeysJson.getString(kid);
+                config.addPubSecKey(new PubSecKeyOptions()
                         .setAlgorithm("RS256")
-                        .setPublicKey(jwtPubKey)
-                )
-                ;
+                        .setPublicKey(_jwtPubKey)
+                );
+            }
+        }
 
         JWTAuth jwtAuth = JWTAuth.create(vertx, config);
 
