@@ -7,22 +7,26 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
-import org.apache.axis2.json.gson.JsonBuilder;
 
 import java.util.Set;
 
 public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
+    private static Logger logger = LoggerFactory.getLogger(JWTAuthenticatorVerticle.class);
+
     private static String getEnv(String envName, String defaultVal) {
         String val = System.getenv().getOrDefault(envName, defaultVal);
-        if(val == null)
-            throw new IllegalArgumentException("Missing '"+envName+"' env var !");
+        if(val == null) {
+            String msg = String.format("Missing '%s' env var !", envName);
+            logger.warn(msg);
+        }
         return val;
     }
 
