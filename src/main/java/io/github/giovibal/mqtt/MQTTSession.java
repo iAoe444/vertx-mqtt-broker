@@ -5,18 +5,15 @@ import io.github.giovibal.mqtt.parser.MQTTEncoder;
 import io.github.giovibal.mqtt.persistence.StoreManager;
 import io.github.giovibal.mqtt.persistence.Subscription;
 import io.github.giovibal.mqtt.prometheus.PromMetrics;
-import io.github.giovibal.mqtt.prometheus.PromMetricsExporter;
 import io.github.giovibal.mqtt.security.AuthorizationClient;
-import io.prometheus.client.Counter;
+import io.github.giovibal.mqtt.security.TenantUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
-import io.vertx.core.eventbus.MessageProducer;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.PassiveExpiringMap;
@@ -26,7 +23,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Giovanni Baleani on 07/05/2014.
@@ -100,14 +96,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
     }
 
     private String extractTenant(String username) {
-        if(username == null || username.trim().length()==0)
-            return "";
-        String tenant = "";
-        int idx = username.lastIndexOf('@');
-        if(idx > 0) {
-            tenant = username.substring(idx+1);
-        }
-        return tenant;
+        return TenantUtils.extractTenant(username);
     }
 
     public void setPublishMessageHandler(Handler<PublishMessage> publishMessageHandler) {
@@ -140,13 +129,19 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         String username = connectMessage.getUsername();
         String password = connectMessage.getPassword();
 
+        String clientID = connectMessage.getClientID();
+        String tenant = extractTenant(clientID);
+//        if(username == null || username.trim().length()==0)
+//            tenant = extractTenant(clientID);
+//        else
+//            tenant = extractTenant(username);
+        _initTenant(tenant);
+
         if(securityEnabled) {
             AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);
-            auth.authorize(username, password, validationInfo -> {
+            auth.authorize(username, password, tenant, validationInfo -> {
                 if (validationInfo.auth_valid) {
                 	authorizationToken = validationInfo.token;
-                    String tenant = validationInfo.tenant;
-                    _initTenant(tenant);
                     _handleConnectMessage(connectMessage);
                     authHandler.handle(Boolean.TRUE);
                 } else {
@@ -155,15 +150,6 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             });
         }
         else {
-            String clientID = connectMessage.getClientID();
-            String tenant = null;
-            if(username == null || username.trim().length()==0) {
-                tenant = extractTenant(clientID);
-            }
-            else {
-                tenant = extractTenant(username);
-            }
-            _initTenant(tenant);
             _handleConnectMessage(connectMessage);
             authHandler.handle(Boolean.TRUE);
         }

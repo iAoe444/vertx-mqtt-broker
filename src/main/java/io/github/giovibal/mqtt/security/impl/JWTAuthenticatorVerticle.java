@@ -17,6 +17,23 @@ import io.vertx.ext.auth.jwt.JWTAuthOptions;
 
 import java.util.Set;
 
+/**
+ * Uses JWT to validate user, theese are the 2 strategies:
+ *
+ * Tenant derive from clientID or username, if username contains "@"
+ * parameters must be conform to 1 case, otherwise to 2 case:
+ *
+ * 1. Login with OAuth2 flow=password call:
+ *    clientID: id@tenant
+ *    username: user
+ *    password: password
+ *
+ * 2. Login with JWT
+ *    clientID: id@tenant
+ *    username: jwt-access-token
+ *    password: not used
+ *
+ */
 public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
     private static Logger logger = LoggerFactory.getLogger(JWTAuthenticatorVerticle.class);
@@ -61,16 +78,16 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         JWTAuth jwtAuth = JWTAuth.create(vertx, config);
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer(address, (Message<JsonObject> msg) -> {
-            JsonObject oauth2_token = msg.body();
-            String username = oauth2_token.getString("username");
-            String password = oauth2_token.getString("password");
+            JsonObject authReq = msg.body();
+            String username = authReq.getString("username");
+            String password = authReq.getString("password");
+            String tenant = authReq.getString("tenant");
 
             // token validation
             try {
                 HttpClientOptions opt = new HttpClientOptions();
                 HttpClient httpClient = vertx.createHttpClient(opt);
 
-                String accessToken = username;
 
                 if(username!=null && username.contains("@")) {
                     login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
@@ -82,13 +99,14 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                             msg.reply(vi.toJson());
                         } else {
                             String jwt = loginEvt.result();
-                            setupProfile( validateJWT(jwtAuth, jwt) ).setHandler(event -> msg.reply(event.result()));
+                            setupProfile( validateJWT(jwtAuth, jwt, tenant)).setHandler(event -> msg.reply(event.result()));
                         }
                     });
                 }
                 else {
                     // If username not contains "@", validate as JWT ...
-                    setupProfile( validateJWT(jwtAuth, accessToken) ).setHandler(event -> msg.reply(event.result()));
+                    String accessToken = username;
+                    setupProfile( validateJWT(jwtAuth, accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
                 }
 
             } catch (Throwable e) {
@@ -105,14 +123,38 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         logger.info("Startd MQTT Authorization, address: " + consumer.address());
     }
 
-    private Future<User> validateJWT(JWTAuth jwtAuth, String jwt) {
+    private static final String TENANTS_ADMIN_CLAIM = "tenants-admin";
+    private Future<User> validateJWT(JWTAuth jwtAuth, String jwt, String tenant) {
         Future<User> future = Future.future();
 
         jwtAuth.authenticate(new JsonObject().put("jwt", jwt), res -> {
             if (res.succeeded()) {
                 User theUser = res.result();
-                System.out.println(theUser.principal().encodePrettily());
-                future.complete(theUser);
+                logger.info("USER => " + theUser.principal().encodePrettily());
+                //future.complete(theUser);
+
+                // also check tenant
+                if(tenant==null) {
+                    logger.error("Tenant cannot be null! ");
+                    future.fail("Tenant cannot be null! ");
+                } else {
+                    theUser.isAuthorized(TENANTS_ADMIN_CLAIM, e -> {
+                        if (e.succeeded() && e.result()) {
+                            future.complete(theUser);
+                            String msg = String.format("Accessed to tenant '%s' from tenants-admin user %s", tenant, theUser.principal().getString("preferred_username", "n/a"));
+                            logger.warn(msg);
+                        } else {
+                            theUser.isAuthorized(tenant, event -> {
+                                if (event.succeeded() && event.result()) {
+                                    future.complete(theUser);
+                                } else {
+                                    future.fail("User cannot access to tenant: "+ tenant);
+                                }
+                            });
+                        }
+                    });
+                }
+
             } else {
                 // Failed!
                 future.fail(res.cause());
@@ -121,6 +163,7 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
         return future;
     }
+
 
     private Future<JsonObject> setupProfile(Future<User> validateJWTResp) {
         Future<JsonObject> future = Future.future();
@@ -147,12 +190,12 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 String scope = j.getString("scope", null); // IGNORED
                 boolean valid = true;
                 String userId = j.getString("preferred_username");
-                String tenant = j.getString("tenant", null);
+//                String tenant = j.getString("tenant", null);
 
                 AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
                 vi.auth_valid = valid;
                 vi.authorized_user = userId;
-                vi.tenant = tenant;
+//                vi.tenant = tenant;
                 vi.error_msg = "";
 
                 JsonObject json = vi.toJson();

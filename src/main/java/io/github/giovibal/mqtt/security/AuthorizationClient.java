@@ -1,9 +1,5 @@
 package io.github.giovibal.mqtt.security;
 
-import java.util.List;
-
-import org.dna.mqtt.moquette.proto.messages.SubscribeMessage.Couple;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -12,6 +8,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.dna.mqtt.moquette.proto.messages.SubscribeMessage.Couple;
+
+import java.util.List;
 
 /**
  * Created by giova_000 on 14/10/2015.
@@ -28,11 +27,13 @@ public class AuthorizationClient {
         this.authenticatorAddress = authenticatorAddress;
     }
 
-    public void authorize(String username, String password, Handler<ValidationInfo> authHandler) {
+    public void authorize(String username, String password, String tenant, Handler<ValidationInfo> authHandler) {
         // AUTHENTICATION START
         JsonObject oauth2_token_info = new JsonObject()
                 .put("username", username)
-                .put("password", password);
+                .put("password", password)
+                .put("tenant", tenant)
+                ;
 
         eventBus.send(authenticatorAddress, oauth2_token_info, (AsyncResult<Message<JsonObject>> res) -> {
             ValidationInfo vi = new ValidationInfo();
@@ -42,7 +43,7 @@ public class AuthorizationClient {
                 vi.fromJson(validationInfo);
                 logger.debug("authenticated ===> " + vi.auth_valid);
                 if (vi.auth_valid) {
-                    logger.debug("authorized_user ===> " + vi.authorized_user + ", tenant ===> " + vi.tenant);
+                    logger.debug("authorized_user ===> " + vi.authorized_user);
                     authHandler.handle(vi);
                 } else {
                     logger.debug("authenticated error ===> " + vi.error_msg);
@@ -96,7 +97,7 @@ public class AuthorizationClient {
         public Boolean auth_valid;
         public String authorized_user;
         public String error_msg;
-        public String tenant;
+//        public String tenant;
         public String token = null;
         
         public void fromJson(JsonObject validationInfo) {
@@ -104,9 +105,9 @@ public class AuthorizationClient {
             authorized_user = validationInfo.getString("authorized_user");
             error_msg = validationInfo.getString("error_msg");
             token = validationInfo.getString("token");
-            if (auth_valid) {
-                tenant = extractTenant(authorized_user);
-            }
+//            if (auth_valid) {
+//                tenant = extractTenant(authorized_user);
+//            }
         }
         public JsonObject toJson() {
             JsonObject json = new JsonObject();
@@ -118,16 +119,9 @@ public class AuthorizationClient {
             }
             return json;
         }
-        private String extractTenant(String username) {
-            if(username == null || username.trim().length()==0)
-                return "";
-            String tenant = "";
-            int idx = username.lastIndexOf('@');
-            if(idx > 0) {
-                tenant = username.substring(idx+1);
-            }
-            return tenant;
-        }
+//        private String extractTenant(String username) {
+//            return TenantUtils.extractTenant(username);
+//        }
     }
 
 
