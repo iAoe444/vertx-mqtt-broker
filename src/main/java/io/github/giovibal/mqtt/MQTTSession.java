@@ -131,10 +131,6 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
         String clientID = connectMessage.getClientID();
         String tenant = extractTenant(clientID);
-//        if(username == null || username.trim().length()==0)
-//            tenant = extractTenant(clientID);
-//        else
-//            tenant = extractTenant(username);
         _initTenant(tenant);
 
         if(securityEnabled) {

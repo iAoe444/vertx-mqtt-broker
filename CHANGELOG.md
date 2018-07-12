@@ -1,3 +1,10 @@
+# v 2.3.0
+- JWT authorization support, 
+now clients **must** include tenant in "clienID" during mqtt-connect, 
+using this pattern: 
+        
+        [client-id]@[tenant]
+
 # v 2.2.14
 - JWT auth support 
 
