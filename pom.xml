@@ -30,6 +30,10 @@
             <id>wso2-maven2-repository</id>
             <url>http://maven.wso2.org/nexus/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>filippetti-maven-repo</id>
+            <url>https://nexus.eimware.it/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>

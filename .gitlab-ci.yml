@@ -15,7 +15,7 @@ stages:
 maven-build:
   image: maven:3-jdk-8
   stage: build
-  script: "mvn -DskipTests package -B"
+  script: "mvn --settings maven/filippetti-maven-repo.xml -DskipTests package -B"
   artifacts:
     paths:
       - target/*.jar
