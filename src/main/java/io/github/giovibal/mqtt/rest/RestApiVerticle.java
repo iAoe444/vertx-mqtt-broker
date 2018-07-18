@@ -12,6 +12,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import it.filippetti.sp.auth.SPAuthHandler;
 import org.dna.mqtt.moquette.proto.messages.AbstractMessage;
 import org.dna.mqtt.moquette.proto.messages.PublishMessage;
 
@@ -93,7 +94,27 @@ public class RestApiVerticle extends AbstractVerticle {
         });
 
 
-        server.requestHandler(router::accept).listen(httpPort, event -> {
+        // JWT AUTH
+        SPAuthHandler spAuthHandler = SPAuthHandler.create(vertx);
+        Router mainRouter = Router.router(vertx);
+        mainRouter.route("/sp/*")
+                .handler(spAuthHandler::validateJWTToken)
+                .handler(spAuthHandler::validateTenant)
+        ;
+        mainRouter.route("/api/v2/*")
+                .handler(spAuthHandler::validateJWTToken)
+                .handler(spAuthHandler::validateTenant)
+        ;
+        // retrocompatilità con vecchie api
+        mainRouter.mountSubRouter("/sp", router);
+        // nuovi path per le nuove api
+        mainRouter.mountSubRouter("/api/v2", router);
+        mainRouter.mountSubRouter("/", router);
+        mainRouter.mountSubRouter("/api/1.2", router);
+        mainRouter.route().handler( ctx -> ctx.response().end() );
+        // JWT AUTH END
+
+        server.requestHandler(mainRouter::accept).listen(httpPort, event -> {
             if (event.succeeded()) {
                 logger.info("RestApiVerticle http server started on http://<host>:" + server.actualPort());
             } else {

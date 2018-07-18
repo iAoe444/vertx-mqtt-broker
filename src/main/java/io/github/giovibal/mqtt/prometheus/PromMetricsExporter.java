@@ -1,6 +1,5 @@
 package io.github.giovibal.mqtt.prometheus;
 
-import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.hotspot.DefaultExports;
 import io.prometheus.client.vertx.MetricsHandler;
 import io.vertx.core.AbstractVerticle;

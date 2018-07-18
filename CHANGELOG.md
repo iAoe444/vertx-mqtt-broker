@@ -1,3 +1,6 @@
+# v 2.3.1
+- added sp-vertx-auth:1.0.2 as dependency
+
 # v 2.3.0
 - JWT authorization support, 
 now clients **must** include tenant in "clienID" during mqtt-connect, 

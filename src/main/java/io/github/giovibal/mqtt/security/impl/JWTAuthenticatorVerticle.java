@@ -14,6 +14,7 @@ import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import it.filippetti.sp.auth.SPAuthHandler;
 
 import java.util.Set;
 
@@ -52,30 +53,8 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         String identityURL = getEnv("IDP_URL", c.getIdpUrl());
         String app_key = getEnv("CLIENT_ID", c.getAppKey());
         String app_secret = getEnv("CLIENT_SECRET", c.getAppSecret());
-        String jwtPubKey = getEnv("JWT_PUB_KEY", null);
-        String jwtPubKeys = getEnv("JWT_PUB_KEYS", null);
 
-        JWTAuthOptions config = new JWTAuthOptions();
-
-        if(jwtPubKey!=null) {
-            config.addPubSecKey(new PubSecKeyOptions()
-                    .setAlgorithm("RS256")
-                    .setPublicKey(jwtPubKey)
-            );
-        }
-        if(jwtPubKeys!=null) {
-            JsonObject jwtPubKeysJson = new JsonObject(jwtPubKeys);
-            Set<String> kids = jwtPubKeysJson.fieldNames();
-            for(String kid : kids) {
-                String _jwtPubKey = jwtPubKeysJson.getString(kid);
-                config.addPubSecKey(new PubSecKeyOptions()
-                        .setAlgorithm("RS256")
-                        .setPublicKey(_jwtPubKey)
-                );
-            }
-        }
-
-        JWTAuth jwtAuth = JWTAuth.create(vertx, config);
+        SPAuthHandler spAuthHandler = SPAuthHandler.create(vertx);
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer(address, (Message<JsonObject> msg) -> {
             JsonObject authReq = msg.body();
@@ -99,14 +78,14 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                             msg.reply(vi.toJson());
                         } else {
                             String jwt = loginEvt.result();
-                            setupProfile( validateJWT(jwtAuth, jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+                            setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
                         }
                     });
                 }
                 else {
                     // If username not contains "@", validate as JWT ...
                     String accessToken = username;
-                    setupProfile( validateJWT(jwtAuth, accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
+                    setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
                 }
 
             } catch (Throwable e) {
@@ -122,48 +101,6 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
         logger.info("Startd MQTT Authorization, address: " + consumer.address());
     }
-
-    private static final String TENANTS_ADMIN_CLAIM = "tenants-admin";
-    private Future<User> validateJWT(JWTAuth jwtAuth, String jwt, String tenant) {
-        Future<User> future = Future.future();
-
-        jwtAuth.authenticate(new JsonObject().put("jwt", jwt), res -> {
-            if (res.succeeded()) {
-                User theUser = res.result();
-                logger.info("USER => " + theUser.principal().encodePrettily());
-                //future.complete(theUser);
-
-                // also check tenant
-                if(tenant==null) {
-                    logger.error("Tenant cannot be null! ");
-                    future.fail("Tenant cannot be null! ");
-                } else {
-                    theUser.isAuthorized(TENANTS_ADMIN_CLAIM, e -> {
-                        if (e.succeeded() && e.result()) {
-                            future.complete(theUser);
-                            String msg = String.format("Accessed to tenant '%s' from tenants-admin user %s", tenant, theUser.principal().getString("preferred_username", "n/a"));
-                            logger.warn(msg);
-                        } else {
-                            theUser.isAuthorized(tenant, event -> {
-                                if (event.succeeded() && event.result()) {
-                                    future.complete(theUser);
-                                } else {
-                                    future.fail("User cannot access to tenant: "+ tenant);
-                                }
-                            });
-                        }
-                    });
-                }
-
-            } else {
-                // Failed!
-                future.fail(res.cause());
-            }
-        });
-
-        return future;
-    }
-
 
     private Future<JsonObject> setupProfile(Future<User> validateJWTResp) {
         Future<JsonObject> future = Future.future();
@@ -190,12 +127,10 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 String scope = j.getString("scope", null); // IGNORED
                 boolean valid = true;
                 String userId = j.getString("preferred_username");
-//                String tenant = j.getString("tenant", null);
 
                 AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
                 vi.auth_valid = valid;
                 vi.authorized_user = userId;
-//                vi.tenant = tenant;
                 vi.error_msg = "";
 
                 JsonObject json = vi.toJson();

@@ -64,6 +64,11 @@
             <scope>${vertx.scope}</scope>
         </dependency>
         <dependency>
+            <groupId>it.filippetti.sp</groupId>
+            <artifactId>sp-vertx-auth</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.1</version>
