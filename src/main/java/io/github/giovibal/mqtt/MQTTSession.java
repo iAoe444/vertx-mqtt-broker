@@ -95,8 +95,8 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         }
     }
 
-    private String extractTenant(String username) {
-        return TenantUtils.extractTenant(username);
+    private String extractTenant(String s) {
+        return TenantUtils.extractTenant(s);
     }
 
     public void setPublishMessageHandler(Handler<PublishMessage> publishMessageHandler) {
@@ -130,6 +130,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         String password = connectMessage.getPassword();
 
         String clientID = connectMessage.getClientID();
+        // TODO: change field for tenant: max 23 char for MQTT ClientID field
         String tenant = extractTenant(clientID);
         _initTenant(tenant);
 
