@@ -15,38 +15,42 @@ public class MQTTWebSocket extends MQTTSocket {
     
     private static Logger logger = LoggerFactory.getLogger(MQTTWebSocket.class);
     
-    private ServerWebSocket netSocket;
+    private ServerWebSocket webSocket;
 
     public MQTTWebSocket(Vertx vertx, ConfigParser config, ServerWebSocket netSocket, Map<String, MQTTSession> sessions) {
         super(vertx, config, sessions);
-        this.netSocket = netSocket;
+        this.webSocket = netSocket;
     }
 
     public void start() {
-        netSocket.handler(this);
-        netSocket.exceptionHandler(event -> {
+        webSocket.handler(this);
+        webSocket.exceptionHandler(event -> {
             String clientInfo = getClientInfo();
-            logger.info(clientInfo + ", web-socket closed ... " + netSocket.binaryHandlerID() + " error: " + event.getMessage());
+            logger.info(clientInfo + ", web-socket closed ... " + webSocket.binaryHandlerID() + " error: " + event.getMessage());
             handleWillMessage();
             shutdown();
         });
-        netSocket.closeHandler(aVoid -> {
+        webSocket.closeHandler(aVoid -> {
             String clientInfo = getClientInfo();
-            logger.info(clientInfo + ", web-socket closed ... "+ netSocket.binaryHandlerID() +" "+ netSocket.textHandlerID());
+            logger.info(clientInfo + ", web-socket closed ... "+ webSocket.binaryHandlerID() +" "+ webSocket.textHandlerID());
             shutdown();
         });
     }
 
     @Override
     protected void sendMessageToClient(Buffer bytes) {
-        sendMessageToClient(bytes, netSocket, netSocket);
+        sendMessageToClient(bytes, webSocket, webSocket);
     }
 
     protected void closeConnection() {
-        logger.debug("web-socket will be closed ... " + netSocket.binaryHandlerID() + " " + netSocket.textHandlerID());
+        logger.debug("web-socket will be closed ... " + webSocket.binaryHandlerID() + " " + webSocket.textHandlerID());
         if(session!=null) {
             session.handleWillMessage();
         }
-        netSocket.close();
+        try {
+            webSocket.close();
+        } catch (IllegalStateException ise) {
+            logger.warn(ise.getMessage());
+        }
     }
 }
