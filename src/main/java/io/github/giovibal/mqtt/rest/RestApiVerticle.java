@@ -99,11 +99,11 @@ public class RestApiVerticle extends AbstractVerticle {
         Router mainRouter = Router.router(vertx);
         mainRouter.route("/sp/*")
                 .handler(spAuthHandler::validateJWTToken)
-                .handler(spAuthHandler::validateTenant)
+//                .handler(spAuthHandler::validateTenant)
         ;
         mainRouter.route("/api/v2/*")
                 .handler(spAuthHandler::validateJWTToken)
-                .handler(spAuthHandler::validateTenant)
+//                .handler(spAuthHandler::validateTenant)
         ;
         // retrocompatilità con vecchie api
         mainRouter.mountSubRouter("/sp", router);
