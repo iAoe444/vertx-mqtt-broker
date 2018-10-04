@@ -5,7 +5,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 
 /**
- * Created by giova_000 on 15/10/2015.
+ * Created by Giovanni Baleani on 15/10/2015.
  */
 public class SimpleAuthenticatorVerticle extends AuthenticatorVerticle {
     private JsonObject users;

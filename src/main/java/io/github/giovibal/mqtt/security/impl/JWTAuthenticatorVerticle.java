@@ -22,15 +22,15 @@ import java.util.Set;
  * Uses JWT to validate user, theese are the 2 strategies:
  *
  * Tenant derive from clientID or username, if username contains "@"
- * parameters must be conform to 1 case, otherwise to 2 case:
+ * parameters must be conform to case 1, otherwise to case 2:
  *
  * 1. Login with OAuth2 flow=password call:
- *    clientID: id@tenant
+ *    clientID (max 23 chars !!): id@tenant
  *    username: user
  *    password: password
  *
  * 2. Login with JWT
- *    clientID: id@tenant
+ *    clientID (max 23 chars !!): id@tenant
  *    username: jwt-access-token
  *    password: not used
  *
@@ -68,7 +68,7 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 HttpClient httpClient = vertx.createHttpClient(opt);
 
 
-                if(username!=null && username.contains("@")) {
+                if(username!=null && username.contains("@")) { // legacy clients
                     login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
                         if(loginEvt.failed()) {
                             AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
@@ -87,6 +87,74 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                     String accessToken = username;
                     setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
                 }
+
+
+                /*
+                Required Login Info: <user> <pass> <tenant> <access_token> <uuid>
+
+                Scenario 2018 A
+                ClientID: <uuid>
+                Username: <user>@<tenant>
+                Password: <access_token>
+
+                Scenario 2018 B ==> deprecate: want user always JWT token to access platform services !!
+                ClientID: <uuid>
+                Username: <user>@<tenant> ==> login with either username = <user> or username = <user>@<tenant>
+                Password: <pass>
+
+
+                Scenario 2015 A ==> tenant cannot be extracted from login info !!!!! (old web guis, jztool, can use "2015 B"=="2018 B")
+                ClientID: <uuid>
+                Username: <access_token>
+                Password: <refresh_token>
+
+                Scenario 2015 B
+                ClientID: <uuid>
+                Username: <user>@<tenant> ==> login always with username = <user>@<tenant>
+                Password: <pass>
+
+
+                Esigenze:
+                1. il jztool nuovo deve potersi autenticare sia nelle piataforme vecchie che quelle nuove
+                2. la smart-gui / config-console / graphdb-console / ... meglio se non devono essere aggiornate, ma fattibile
+                3. la dashboard si autentica mettendo jwt sulla username
+
+
+                strategy:
+
+                new platforms (2018) for jztools and UIs
+                ClientID: <uuid>
+                Username: <user>@<tenant>
+                Password: <access_token>
+                Solution: new broker support this
+
+                old platforms (2015) for jztools
+                ClientID: <uuid>
+                Username: <user>@<tenant>
+                Password: <password>
+                Solution: new broker support this
+
+                old platforms (2015) for UIs
+                ClientID: <uuid>
+                Username: <access_token>
+                Password: <refresh_token>
+                Solution: old broker and old UIs
+
+
+                1. if username contains "@"
+                    extract tenant from username
+                    validate jwt from password field,
+                    if fail, validate jwt from username(without @tenant)
+                    if fail, auth with username(without @tenant) and password fields
+                    if fail, auth with username and password fields
+
+                2. if username not contains "@"
+                    extract tenant from clientid
+                    validate jwt from password field
+                    if fail, validate jwt from username field
+                    if fail, auth with username and password fields
+
+                */
 
             } catch (Throwable e) {
                 logger.fatal(e.getMessage(), e);

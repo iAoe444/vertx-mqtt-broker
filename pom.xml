@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vertx.version>3.5.2</vertx.version>
         <vertx.scope>provided</vertx.scope>
+        <prometheus.version>0.5.0</prometheus.version>
         <wso2.scope>provided</wso2.scope>
         <project.deploydir>${project.basedir}/target/deploy/${project.artifactId}</project.deploydir>
     </properties>
@@ -90,19 +91,19 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
-            <version>0.0.26</version>
+            <version>${prometheus.version}</version>
         </dependency>
         <!-- Hotspot JVM metrics-->
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_hotspot</artifactId>
-            <version>0.0.26</version>
+            <version>${prometheus.version}</version>
         </dependency>
         <!-- Exposition vert.x-->
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_vertx</artifactId>
-            <version>0.0.26</version>
+            <version>${prometheus.version}</version>
         </dependency>
 
 
