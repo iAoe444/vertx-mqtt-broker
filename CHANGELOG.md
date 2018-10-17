@@ -1,3 +1,9 @@
+# v 2.4.0
+- Only JWT auth 
+    clientid: <free id>
+    username: <user>@<tenant>
+    password: <jwt access token>
+     
 # v 2.3.1
 - added sp-vertx-auth:1.0.2 as dependency
 
