@@ -5,18 +5,12 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
-import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import it.filippetti.sp.auth.SPAuthHandler;
-
-import java.util.Set;
 
 /**
  * Uses JWT to validate user, theese are the 2 strategies:
@@ -64,29 +58,27 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
             // token validation
             try {
-                HttpClientOptions opt = new HttpClientOptions();
-                HttpClient httpClient = vertx.createHttpClient(opt);
-
-
-                if(username!=null && username.contains("@")) { // legacy clients
-                    login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
-                        if(loginEvt.failed()) {
-                            AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-                            vi.auth_valid = false;
-                            vi.authorized_user = "";
-                            vi.error_msg = loginEvt.cause().getMessage();
-                            msg.reply(vi.toJson());
-                        } else {
-                            String jwt = loginEvt.result();
-                            setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
-                        }
-                    });
-                }
-                else {
-                    // If username not contains "@", validate as JWT ...
-                    String accessToken = username;
-                    setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
-                }
+//                HttpClientOptions opt = new HttpClientOptions();
+//                HttpClient httpClient = vertx.createHttpClient(opt);
+//                if(username!=null && username.contains("@")) { // legacy clients
+//                    login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
+//                        if(loginEvt.failed()) {
+//                            AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
+//                            vi.auth_valid = false;
+//                            vi.authorized_user = "";
+//                            vi.error_msg = loginEvt.cause().getMessage();
+//                            msg.reply(vi.toJson());
+//                        } else {
+//                            String jwt = loginEvt.result();
+//                            setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+//                        }
+//                    });
+//                }
+//                else {
+//                    // If username not contains "@", validate as JWT ...
+//                    String accessToken = username;
+//                    setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
+//                }
 
 
                 /*
@@ -97,13 +89,13 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 Username: <user>@<tenant>
                 Password: <access_token>
 
-                Scenario 2018 B ==> deprecate: want user always JWT token to access platform services !!
+                Scenario 2018 B ==> deprecate: we want always use JWT token to access platform services !!
                 ClientID: <uuid>
                 Username: <user>@<tenant> ==> login with either username = <user> or username = <user>@<tenant>
                 Password: <pass>
 
 
-                Scenario 2015 A ==> tenant cannot be extracted from login info !!!!! (old web guis, jztool, can use "2015 B"=="2018 B")
+                Scenario 2015 A ==> tenant cannot be extracted from login info !!!!! (old web ui, jztool, can use "2015 B"=="2018 B")
                 ClientID: <uuid>
                 Username: <access_token>
                 Password: <refresh_token>
@@ -140,21 +132,15 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                 Password: <refresh_token>
                 Solution: old broker and old UIs
 
-
-                1. if username contains "@"
-                    extract tenant from username
-                    validate jwt from password field,
-                    if fail, validate jwt from username(without @tenant)
-                    if fail, auth with username(without @tenant) and password fields
-                    if fail, auth with username and password fields
-
-                2. if username not contains "@"
-                    extract tenant from clientid
-                    validate jwt from password field
-                    if fail, validate jwt from username field
-                    if fail, auth with username and password fields
-
                 */
+
+                /* NEW ONLY SUPPORTED STRATEGY:
+                   clientID: <uuid>
+                   username: <user>@<tenant>
+                   passwrdo: JWT access-token
+                */
+                String accessToken = password;
+                setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
 
             } catch (Throwable e) {
                 logger.fatal(e.getMessage(), e);
