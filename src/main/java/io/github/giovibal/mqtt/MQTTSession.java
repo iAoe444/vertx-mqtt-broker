@@ -125,22 +125,17 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
         // init tenant
         tenant = TenantUtils.extractTenant(username);
-        if(tenant==null || tenant.trim().length()==0) {
-            //TODO: remove because clientID is limited to 26 chars
-            logger.warn("Tenant extracted from clientID: "+ clientID);
-            tenant = TenantUtils.extractTenant(clientID);
-        }
         if(tenant == null)
             throw new IllegalStateException("Tenant cannot be null");
 
-
+        String mqttVer = "n/a";
         if("MQIsdp".equals(protoName)) {
-            logger.debug(String.format("Detected MQTT v3.1 (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
+            mqttVer = "3.1";
         } else if("MQTT".equals(protoName)) {
-            logger.debug(String.format("Detected MQTT v3.1.1 (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
-        } else {
-            logger.debug(String.format("Detected MQTT n/a (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
+            mqttVer = "3.1.1";
         }
+        logger.debug(String.format("Detected MQTT v%s (%s), clientID: %s, tenant: %s", mqttVer, protoName, clientID, tenant));
+
 
         if(securityEnabled) {
             AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);

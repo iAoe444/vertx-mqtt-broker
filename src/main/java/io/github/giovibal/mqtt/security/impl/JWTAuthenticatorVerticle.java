@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -138,10 +139,35 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                    clientID: <uuid>
                    username: <user>@<tenant>
                    passwrdo: JWT access-token
+
+                   if not authenticated (per i gateway a campo)
+                   clientID: <uuid>
+                   username: <user>@<tenant>
+                   passwrdo: <password>
                 */
                 String accessToken = password;
-                setupProfile(spAuthHandler.validateJWT(accessToken, tenant))
-                        .setHandler(event -> msg.reply(event.result()));
+                Future<User> user = spAuthHandler.validateJWT(accessToken, tenant);
+                user.setHandler(jwtValidationEvent -> {
+                    if(jwtValidationEvent.succeeded()) {
+                        setupProfile(user).setHandler(event -> msg.reply(event.result()));
+                    } else {
+                        // ... JWT validation failed, try with plain user/pass to IDP
+                        HttpClientOptions opt = new HttpClientOptions();
+                        HttpClient httpClient = vertx.createHttpClient(opt);
+                        login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
+                            if(loginEvt.succeeded()) {
+                                String jwt = loginEvt.result();
+                                setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+                            } else {
+                                AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
+                                vi.auth_valid = false;
+                                vi.authorized_user = "";
+                                vi.error_msg = loginEvt.cause().getMessage();
+                                msg.reply(vi.toJson());
+                            }
+                        });
+                    }
+                });
 
             } catch (Throwable e) {
                 logger.fatal(e.getMessage(), e);
