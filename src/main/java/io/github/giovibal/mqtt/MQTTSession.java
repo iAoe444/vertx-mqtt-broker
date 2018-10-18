@@ -119,17 +119,10 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         clientID = connectMessage.getClientID();
         cleanSession = connectMessage.isCleanSession();
         protoName = connectMessage.getProtocolName();
-        if("MQIsdp".equals(protoName)) {
-            logger.debug("Detected MQTT v. 3.1 " + protoName + ", clientID: " + clientID);
-        } else if("MQTT".equals(protoName)) {
-            logger.debug("Detected MQTT v. 3.1.1 " + protoName + ", clientID: " + clientID);
-        } else {
-            logger.debug("Detected MQTT protocol " + protoName + ", clientID: " + clientID);
-        }
+
 
         String username = connectMessage.getUsername();
         String password = connectMessage.getPassword();
-
         String clientID = connectMessage.getClientID();
         String tenant = TenantUtils.extractTenant(username);
         if(tenant==null || tenant.trim().length()==0) {
@@ -137,7 +130,17 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             logger.warn("Tenant extracted from clientID: "+ clientID);
             tenant = TenantUtils.extractTenant(clientID);
         }
-        _initTenant(tenant);
+        if(tenant == null)
+            throw new IllegalStateException("Tenant cannot be null");
+        this.tenant = tenant;
+
+        if("MQIsdp".equals(protoName)) {
+            logger.debug(String.format("Detected MQTT v3.1 (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
+        } else if("MQTT".equals(protoName)) {
+            logger.debug(String.format("Detected MQTT v3.1.1 (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
+        } else {
+            logger.debug(String.format("Detected MQTT n/a (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
+        }
 
         if(securityEnabled) {
             AuthorizationClient auth = new AuthorizationClient(vertx.eventBus(), authenticatorAddress);
