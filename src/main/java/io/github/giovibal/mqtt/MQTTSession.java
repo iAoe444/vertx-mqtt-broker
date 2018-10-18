@@ -120,11 +120,11 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         cleanSession = connectMessage.isCleanSession();
         protoName = connectMessage.getProtocolName();
 
-
         String username = connectMessage.getUsername();
         String password = connectMessage.getPassword();
-        String clientID = connectMessage.getClientID();
-        String tenant = TenantUtils.extractTenant(username);
+
+        // init tenant
+        tenant = TenantUtils.extractTenant(username);
         if(tenant==null || tenant.trim().length()==0) {
             //TODO: remove because clientID is limited to 26 chars
             logger.warn("Tenant extracted from clientID: "+ clientID);
@@ -132,7 +132,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         }
         if(tenant == null)
             throw new IllegalStateException("Tenant cannot be null");
-        this.tenant = tenant;
+
 
         if("MQIsdp".equals(protoName)) {
             logger.debug(String.format("Detected MQTT v3.1 (%s), clientID: %s, tenant: %s", protoName, clientID, tenant));
@@ -159,11 +159,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             authHandler.handle(Boolean.TRUE);
         }
     }
-    private void _initTenant(String tenant) {
-        if(tenant == null)
-            throw new IllegalStateException("Tenant cannot be null");
-        this.tenant = tenant;
-    }
+
     private void _handleConnectMessage(ConnectMessage connectMessage) {
         if (!cleanSession) {
             logger.debug("cleanSession=false: restore old session state with subscriptions ...");
