@@ -131,7 +131,12 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         String password = connectMessage.getPassword();
 
         String clientID = connectMessage.getClientID();
-        String tenant = TenantUtils.extractTenant(connectMessage.getUsername());
+        String tenant = TenantUtils.extractTenant(username);
+        if(tenant==null || tenant.trim().length()==0) {
+            //TODO: remove because clientID is limited to 26 chars
+            logger.warn("Tenant extracted from clientID: "+ clientID);
+            tenant = TenantUtils.extractTenant(clientID);
+        }
         _initTenant(tenant);
 
         if(securityEnabled) {

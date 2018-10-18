@@ -1,7 +1,5 @@
-# v NEXT
-- Updated sp-vertx-auth to v1.0.4 as dependency
-
 # v 2.4.0
+- Updated sp-vertx-auth to v1.0.4 as dependency
 - Only JWT auth 
     clientid: <free id>
     username: <user>@<tenant>

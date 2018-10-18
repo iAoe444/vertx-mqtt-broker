@@ -140,7 +140,8 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                    passwrdo: JWT access-token
                 */
                 String accessToken = password;
-                setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
+                setupProfile(spAuthHandler.validateJWT(accessToken, tenant))
+                        .setHandler(event -> msg.reply(event.result()));
 
             } catch (Throwable e) {
                 logger.fatal(e.getMessage(), e);
