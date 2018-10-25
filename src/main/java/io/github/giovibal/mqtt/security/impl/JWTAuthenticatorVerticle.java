@@ -1,7 +1,6 @@
 package io.github.giovibal.mqtt.security.impl;
 
 import io.github.giovibal.mqtt.security.AuthorizationClient;
-import io.github.giovibal.mqtt.security.TenantUtils;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -57,6 +56,9 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
             String username = authReq.getString("username");
             String password = authReq.getString("password");
             String tenant = authReq.getString("tenant");
+
+            logger.info(String.format("  Tenant: %s", tenant));
+            logger.info(String.format("Username: %s", username));
 
             // token validation
             try {
@@ -160,25 +162,11 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                                 String jwt = loginEvt.result();
                                 setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
                             } else {
-//                                AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-//                                vi.auth_valid = false;
-//                                vi.authorized_user = "";
-//                                vi.error_msg = loginEvt.cause().getMessage();
-//                                msg.reply(vi.toJson());
-
-                                String subusername = TenantUtils.removeTenant(username);
-                                login(httpClient, identityURL, app_key, app_secret, subusername, password).setHandler(loginEvt2 -> {
-                                    if(loginEvt2.succeeded()) {
-                                        String jwt = loginEvt2.result();
-                                        setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
-                                    } else {
-                                        AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-                                        vi.auth_valid = false;
-                                        vi.authorized_user = "";
-                                        vi.error_msg = loginEvt.cause().getMessage();
-                                        msg.reply(vi.toJson());
-                                    }
-                                });
+                                AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
+                                vi.auth_valid = false;
+                                vi.authorized_user = "";
+                                vi.error_msg = loginEvt.cause().getMessage();
+                                msg.reply(vi.toJson());
                             }
                         });
                     }
