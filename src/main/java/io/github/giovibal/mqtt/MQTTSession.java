@@ -130,7 +130,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         logger.info(String.format("  Tenant: %s",tenant));
         logger.info(String.format("Username: %s",username));
 
-        if(tenant == null || tenant.isEmpty())
+        if(tenant == null)
             throw new IllegalStateException("Tenant cannot be empty or null");
 
         String mqttVer = "n/a";
