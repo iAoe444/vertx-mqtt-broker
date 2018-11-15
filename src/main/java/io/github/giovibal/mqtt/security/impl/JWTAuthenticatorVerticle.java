@@ -40,6 +40,7 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
             String msg = String.format("Missing '%s' env var !", envName);
             logger.warn(msg);
         }
+        logger.info(String.format("ENV: %s: %s", envName, val));
         return val;
     }
 
