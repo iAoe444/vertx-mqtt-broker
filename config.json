@@ -30,10 +30,7 @@
       "address": "mqtt.authenticator.oauth2.keycloak",
       "verticle": "io.github.giovibal.mqtt.security.impl.JWTAuthenticatorVerticle",
       "security": {
-        "authorized_clients": ["testing.*","persistor."],
-        "idp_url":"https://idp.smartplatform.io/auth/realms/sp/protocol/openid-connect/token",
-        "app_key":"smart-gui",
-        "app_secret":"56bff0d5-ec7d-4252-b554-fd40a0305219"
+        "authorized_clients": ["testing.*","persistor."]
       }
     }
   ]
