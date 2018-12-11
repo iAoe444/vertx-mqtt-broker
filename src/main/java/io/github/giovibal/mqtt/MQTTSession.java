@@ -14,8 +14,11 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.jwt.JWK;
+import io.vertx.ext.jwt.JWT;
 import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.dna.mqtt.moquette.proto.messages.*;
 
@@ -129,6 +132,26 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
         logger.info(String.format("  Tenant: %s",tenant));
         logger.info(String.format("Username: %s",username));
+
+        if(tenant == null || tenant.trim().length()==0) {
+            // try to extract from JWT
+            String jwt = username;
+
+            JWT jwtParser = new JWT();
+            JWK jwk = new JWK("RS256", System.getenv("JWT_PUB_KEY"), null);
+            jwtParser.addJWK(jwk);
+            JsonObject jwtJsonObj = jwtParser.decode(jwt);
+            String jwtUsername = jwtJsonObj.getString("preferred_username", null);
+
+            // init tenant
+            tenant = TenantUtils.extractTenant(jwtUsername);
+            username = TenantUtils.removeTenant(jwtUsername);
+
+            logger.info(String.format("  Tenant from JWT: %s",tenant));
+            logger.info(String.format("Username from JWT: %s",username));
+
+            password = jwt;
+        }
 
         if(tenant == null)
             throw new IllegalStateException("Tenant cannot be empty or null");

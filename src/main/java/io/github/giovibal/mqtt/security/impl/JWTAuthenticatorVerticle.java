@@ -58,97 +58,8 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
             String password = authReq.getString("password");
             String tenant = authReq.getString("tenant");
 
-            logger.info(String.format("  Tenant: %s", tenant));
-            logger.info(String.format("Username: %s", username));
-
             // token validation
             try {
-//                HttpClientOptions opt = new HttpClientOptions();
-//                HttpClient httpClient = vertx.createHttpClient(opt);
-//                if(username!=null && username.contains("@")) { // legacy clients
-//                    login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
-//                        if(loginEvt.failed()) {
-//                            AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-//                            vi.auth_valid = false;
-//                            vi.authorized_user = "";
-//                            vi.error_msg = loginEvt.cause().getMessage();
-//                            msg.reply(vi.toJson());
-//                        } else {
-//                            String jwt = loginEvt.result();
-//                            setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
-//                        }
-//                    });
-//                }
-//                else {
-//                    // If username not contains "@", validate as JWT ...
-//                    String accessToken = username;
-//                    setupProfile( spAuthHandler.validateJWT(accessToken, tenant)).setHandler(event -> msg.reply(event.result()));
-//                }
-
-
-                /*
-                Required Login Info: <user> <pass> <tenant> <access_token> <uuid>
-
-                Scenario 2018 A
-                ClientID: <uuid>
-                Username: <user>@<tenant>
-                Password: <access_token>
-
-                Scenario 2018 B ==> deprecate: we want always use JWT token to access platform services !!
-                ClientID: <uuid>
-                Username: <user>@<tenant> ==> login with either username = <user> or username = <user>@<tenant>
-                Password: <pass>
-
-
-                Scenario 2015 A ==> tenant cannot be extracted from login info !!!!! (old web ui, jztool, can use "2015 B"=="2018 B")
-                ClientID: <uuid>
-                Username: <access_token>
-                Password: <refresh_token>
-
-                Scenario 2015 B
-                ClientID: <uuid>
-                Username: <user>@<tenant> ==> login always with username = <user>@<tenant>
-                Password: <pass>
-
-
-                Esigenze:
-                1. il jztool nuovo deve potersi autenticare sia nelle piataforme vecchie che quelle nuove
-                2. la smart-gui / config-console / graphdb-console / ... meglio se non devono essere aggiornate, ma fattibile
-                3. la dashboard si autentica mettendo jwt sulla username
-
-
-                strategy:
-
-                new platforms (2018) for jztools and UIs
-                ClientID: <uuid>
-                Username: <user>@<tenant>
-                Password: <access_token>
-                Solution: new broker support this
-
-                old platforms (2015) for jztools
-                ClientID: <uuid>
-                Username: <user>@<tenant>
-                Password: <password>
-                Solution: new broker support this
-
-                old platforms (2015) for UIs
-                ClientID: <uuid>
-                Username: <access_token>
-                Password: <refresh_token>
-                Solution: old broker and old UIs
-
-                */
-
-                /* NEW ONLY SUPPORTED STRATEGY:
-                   clientID: <uuid>
-                   username: <user>@<tenant>
-                   passwrdo: JWT access-token
-
-                   if not authenticated (per i gateway a campo)
-                   clientID: <uuid>
-                   username: <user>@<tenant>
-                   passwrdo: <password>
-                */
                 String accessToken = password;
                 Future<User> user = spAuthHandler.validateJWT(accessToken, tenant);
                 user.setHandler(jwtValidationEvent -> {
@@ -163,11 +74,21 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                                 String jwt = loginEvt.result();
                                 setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
                             } else {
-                                AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
-                                vi.auth_valid = false;
-                                vi.authorized_user = "";
-                                vi.error_msg = loginEvt.cause().getMessage();
-                                msg.reply(vi.toJson());
+
+                                String username2 = username +"@"+ tenant;
+                                login(httpClient, identityURL, app_key, app_secret, username2, password).setHandler(loginEvt2 -> {
+                                    if(loginEvt2.succeeded()) {
+                                        String jwt = loginEvt2.result();
+                                        setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+                                    } else {
+                                        AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
+                                        vi.auth_valid = false;
+                                        vi.authorized_user = "";
+                                        vi.error_msg = loginEvt2.cause().getMessage();
+                                        msg.reply(vi.toJson());
+                                    }
+                                });
+
                             }
                         });
                     }
@@ -247,9 +168,15 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
             resp.bodyHandler(totalBuffer -> {
                 String jsonResponse = totalBuffer.toString("UTF-8");
                 logger.info(jsonResponse);
-                JsonObject j = new JsonObject(jsonResponse);
-                String access_token = j.getString("access_token");
-                ret.complete(access_token);
+
+                if(resp.statusCode() == 200) {
+                    JsonObject j = new JsonObject(jsonResponse);
+                    String access_token = j.getString("access_token");
+                    ret.complete(access_token);
+                } else {
+                    logger.fatal(resp.statusMessage());
+                    ret.fail(resp.statusMessage());
+                }
             });
         });
 

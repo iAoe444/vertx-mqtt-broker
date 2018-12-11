@@ -1,3 +1,8 @@
+# v 2.4.1
+- Authentication retrocompatibility, now supports this additional strategies:
+    if tenant is null or empty: extract username form jwt (attrib: "preferred_username"), and extract tenant from username
+    if username is "user@tenant", try plain with "user" and "user@tenant"  
+
 # v 2.4.0
 - Updated sp-vertx-auth to v1.0.4 as dependency
 - Only JWT auth 
