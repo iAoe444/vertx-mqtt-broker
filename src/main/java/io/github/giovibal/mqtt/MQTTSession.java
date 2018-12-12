@@ -135,22 +135,26 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
         if(tenant == null || tenant.trim().length()==0) {
             // try to extract from JWT
-            String jwt = username;
+            try {
+                String jwt = username;
 
-            JWT jwtParser = new JWT();
-            JWK jwk = new JWK("RS256", System.getenv("JWT_PUB_KEY"), null);
-            jwtParser.addJWK(jwk);
-            JsonObject jwtJsonObj = jwtParser.decode(jwt);
-            String jwtUsername = jwtJsonObj.getString("preferred_username", null);
+                JWT jwtParser = new JWT();
+                JWK jwk = new JWK("RS256", System.getenv("JWT_PUB_KEY"), null);
+                jwtParser.addJWK(jwk);
+                JsonObject jwtJsonObj = jwtParser.decode(jwt);
+                String jwtUsername = jwtJsonObj.getString("preferred_username", null);
 
-            // init tenant
-            tenant = TenantUtils.extractTenant(jwtUsername);
-            username = TenantUtils.removeTenant(jwtUsername);
+                // init tenant
+                tenant = TenantUtils.extractTenant(jwtUsername);
+                username = TenantUtils.removeTenant(jwtUsername);
 
-            logger.info(String.format("  Tenant from JWT: %s",tenant));
-            logger.info(String.format("Username from JWT: %s",username));
+                logger.info(String.format("  Tenant from JWT: %s", tenant));
+                logger.info(String.format("Username from JWT: %s", username));
 
-            password = jwt;
+                password = jwt;
+            } catch (Throwable e) {
+                logger.warn("Extracting tenant from JWT: "+ e.getMessage());
+            }
         }
 
         if(tenant == null)

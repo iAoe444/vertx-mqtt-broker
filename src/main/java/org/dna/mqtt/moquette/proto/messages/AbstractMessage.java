@@ -15,8 +15,6 @@
  */
 package org.dna.mqtt.moquette.proto.messages;
 
-import javax.xml.bind.DatatypeConverter;
-
 /**
  * Basic abstract message for all MQTT protocol messages.
  * 
