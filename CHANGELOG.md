@@ -1,3 +1,6 @@
+# v 2.5.1
+- Slim down docker image
+
 # v 2.5.0
 - Updated openjdk to v11
 
