@@ -44,9 +44,12 @@ public class MQTTWebSocket extends MQTTSocket {
 
     protected void closeConnection() {
         logger.debug("web-socket will be closed ... " + netSocket.binaryHandlerID() + " " + netSocket.textHandlerID());
-        if(session!=null) {
-            session.handleWillMessage();
+        handleWillMessage();
+        try {
+            netSocket.close();
+        } catch (IllegalStateException e) {
+            logger.warn(e.getMessage());
+            shutdown(); // ensure to clean memory
         }
-        netSocket.close();
     }
 }

@@ -305,12 +305,9 @@ public abstract class MQTTSocket implements MQTTPacketTokenizer.MqttTokenizerLis
     }
 
     protected void handleWillMessage() {
-//        logger.info("handle will message... ");
         if(session != null) {
-//            logger.info("handle will message: session found!");
             session.handleWillMessage();
         }
-//        logger.info("handle will message end.");
     }
 
 }

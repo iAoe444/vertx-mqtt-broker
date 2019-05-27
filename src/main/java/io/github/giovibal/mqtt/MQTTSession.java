@@ -534,7 +534,6 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             messageConsumer.unregister();
             messageConsumer = null;
         }
-//        vertx = null;
     }
 
     public void handleWillMessage() {
