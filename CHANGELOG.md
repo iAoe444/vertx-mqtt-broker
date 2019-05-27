@@ -1,3 +1,6 @@
+# v 2.5.2
+- Handled exceltion on websocket closed due to keeplive time exausted.
+
 # v 2.5.1
 - Slim down docker image
 

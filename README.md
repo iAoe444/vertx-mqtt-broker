@@ -12,7 +12,7 @@ for coder and decoder implementation of MQTT messages.
 
 Quick Start
 -----------
-Requires Vert.x 3.1.x and Maven 3+
+1. Build from sources
 
 ```
 git clone https://github.com/GruppoFilippetti/vertx-mqtt-broker.git
@@ -20,21 +20,23 @@ cd vertx-mqtt-broker
 mvn clean install
 ```
 
-run as normal java ...
+2. Run 
+
 ```
 java -jar target/vertx-mqtt-broker-<version>-fat.jar -c config.json
 ```
 
 Features
 ----
+* MQTT v3.1 and v3.1.1 support
 * Suport both QoS 0, 1 and 2 messages
 * Persistence and session management (cleanSession=false)
-* Multi-tenancy: isolation of topics and storage, (username@tenant)
-* Pluggable authentication
+* Pluggable authentication (via vert.x verticle system)
+    * OAuth 2.0 and OpenID Connect 1.0 authentication
+    * JWT authentication
+* Multi-tenancy
 * MQTT over WebSocket
 * Retain flag
-* Oauth2 authentication integrated with <a href="http://wso2.com/products/identity-server/">WSO2 Identity Server</a>
-and <a href="http://apifest.com/">apifest.com</a>
 * TLS support over TCP and Websocket
-* Multiple tcp connections configurable in the same broker instance
-* Broker-to-Broker bidirectional bridge over TCP, websocket with TLS support
+* Multiple tcp/websocket transports in the same broker engine
+* Broker-to-Broker bidirectional and  bridge
