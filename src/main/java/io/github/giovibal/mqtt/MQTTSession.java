@@ -150,6 +150,15 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         if(tenant == null || tenant.isEmpty()) {
             // try clientID as fallback of username
             tenant = TenantUtils.extractTenant(clientID);
+            logger.debug(String.format("Tenant from clientID: %s", tenant));
+        }
+        if(tenant == null || tenant.isEmpty()) {
+            tenant = TenantUtils.extractTenantFromJWT(connectMessage.getUsername());
+            logger.debug(String.format("Tenant from JWT in username: %s", tenant));
+        }
+        if(tenant == null || tenant.isEmpty()) {
+            tenant = TenantUtils.extractTenantFromJWT(connectMessage.getPassword());
+            logger.debug(String.format("Tenant from JWT in password: %s", tenant));
         }
         logger.info(String.format("ClientID: %s, Username: %s, Tenant: %s",clientID, username, tenant));
 
