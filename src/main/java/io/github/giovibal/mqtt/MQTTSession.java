@@ -142,6 +142,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
 
         String username = connectMessage.getUsername();
         String password = connectMessage.getPassword();
+        logger.info(String.format("ClientID: %s, Username: %s, Password: %s",clientID, username, password));
 
         // init tenant
         tenant = TenantUtils.extractTenant(username);
@@ -150,7 +151,7 @@ public class MQTTSession implements Handler<Message<Buffer>> {
             // try clientID as fallback of username
             tenant = TenantUtils.extractTenant(clientID);
         }
-        logger.info(String.format("Tenant: %s, Username: %s, ClientID: %s",tenant, username, clientID));
+        logger.info(String.format("ClientID: %s, Username: %s, Tenant: %s",clientID, username, tenant));
 
         if(tenant == null)
             throw new IllegalStateException("Tenant cannot be empty or null");
