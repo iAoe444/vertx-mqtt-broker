@@ -147,14 +147,14 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         // init tenant
         tenant = TenantUtils.extractTenant(username);
         username = TenantUtils.removeTenant(username);
-        if(tenant == null) {
+        if(tenant == null || tenant.isEmpty()) {
             // try clientID as fallback of username
             tenant = TenantUtils.extractTenant(clientID);
         }
         logger.info(String.format("ClientID: %s, Username: %s, Tenant: %s",clientID, username, tenant));
 
         if(tenant == null)
-            throw new IllegalStateException("Tenant cannot be empty or null");
+            throw new IllegalStateException("Tenant cannot be null");
 
         String mqttVer = "n/a";
         if("MQIsdp".equals(protoName)) {

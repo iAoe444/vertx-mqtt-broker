@@ -19,6 +19,12 @@ public class MQTTNetSocket extends MQTTSocket {
 
     public MQTTNetSocket(Vertx vertx, ConfigParser config, NetSocket netSocket, Map<String, MQTTSession> sessions) {
         super(vertx, config,sessions);
+        logger.info(String.format("MQTT new TCP connection: [%s:%s > %s:%s]",
+                netSocket.remoteAddress().host(),
+                netSocket.remoteAddress().port(),
+                netSocket.localAddress().host(),
+                netSocket.localAddress().port()
+                ));
         this.netSocket = netSocket;
     }
 
