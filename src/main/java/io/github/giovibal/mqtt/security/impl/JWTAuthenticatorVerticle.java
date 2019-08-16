@@ -61,7 +61,6 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
             // token validation
             try {
-//                String jwt = password;
                 String jwt = chooseJWT(username, password);
                 Future<User> user = spAuthHandler.validateJWT(jwt, tenant);
                 user.setHandler(jwtValidationEvent -> {
@@ -200,20 +199,12 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         if(password == null || username == null) {
             throw new IllegalArgumentException("username and password cannot be null");
         }
-        boolean usernameIsJWT = JWTUtils.isJWT(username);
+
         if(JWTUtils.isJWT(password)) {
             logger.info("JWT from password");
             return password;
         } else if(JWTUtils.isJWT(username)) {
             logger.info("JWT from username");
-            return username;
-        }
-
-        if(password.length() > username.length()) {
-            logger.info("JWT from password (password > username)");
-            return password;
-        } else if(username.length() > password.length()) {
-            logger.info("JWT from username (username > password)");
             return username;
         } else {
             logger.info("JWT from password (default choice)");
