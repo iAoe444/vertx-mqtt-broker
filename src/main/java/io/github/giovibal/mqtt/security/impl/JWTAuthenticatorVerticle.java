@@ -60,8 +60,9 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
 
             // token validation
             try {
-                String accessToken = password;
-                Future<User> user = spAuthHandler.validateJWT(accessToken, tenant);
+//                String jwt = password;
+                String jwt = chooseJWT(username, password);
+                Future<User> user = spAuthHandler.validateJWT(jwt, tenant);
                 user.setHandler(jwtValidationEvent -> {
                     if(jwtValidationEvent.succeeded()) {
                         setupProfile(user).setHandler(event -> msg.reply(event.result()));
@@ -69,17 +70,18 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
                         // ... JWT validation failed, try with plain user/pass to IDP
                         HttpClientOptions opt = new HttpClientOptions();
                         HttpClient httpClient = vertx.createHttpClient(opt);
+
                         login(httpClient, identityURL, app_key, app_secret, username, password).setHandler(loginEvt -> {
                             if(loginEvt.succeeded()) {
-                                String jwt = loginEvt.result();
-                                setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+                                String jwtFromPlainAuth = loginEvt.result();
+                                setupProfile( spAuthHandler.validateJWT(jwtFromPlainAuth, tenant)).setHandler(event -> msg.reply(event.result()));
                             } else {
 
                                 String username2 = username +"@"+ tenant;
                                 login(httpClient, identityURL, app_key, app_secret, username2, password).setHandler(loginEvt2 -> {
                                     if(loginEvt2.succeeded()) {
-                                        String jwt = loginEvt2.result();
-                                        setupProfile( spAuthHandler.validateJWT(jwt, tenant)).setHandler(event -> msg.reply(event.result()));
+                                        String jwtFromPlainAuth2 = loginEvt2.result();
+                                        setupProfile( spAuthHandler.validateJWT(jwtFromPlainAuth2, tenant)).setHandler(event -> msg.reply(event.result()));
                                     } else {
                                         AuthorizationClient.ValidationInfo vi = new AuthorizationClient.ValidationInfo();
                                         vi.auth_valid = false;
@@ -191,5 +193,22 @@ public class JWTAuthenticatorVerticle extends AuthenticatorVerticle {
         loginReq.end(data, "UTF-8");
 
         return ret;
+    }
+
+    private String chooseJWT(String username, String password) {
+        if(password == null || username == null) {
+            throw new IllegalArgumentException("username and password cannot be null");
+        }
+
+        if(password.length() > username.length()) {
+            logger.info("JWT from password (password > username)");
+            return password;
+        } else if(username.length() > password.length()) {
+            logger.info("JWT from username (username > password)");
+            return username;
+        } else {
+            logger.info("JWT from password");
+            return password;
+        }
     }
 }

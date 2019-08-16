@@ -10,12 +10,11 @@ import io.vertx.core.cli.CLI;
 import io.vertx.core.cli.CLIException;
 import io.vertx.core.cli.CommandLine;
 import io.vertx.core.cli.Option;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.ext.dropwizard.DropwizardMetricsOptions;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import org.apache.commons.io.FileUtils;
 
@@ -143,10 +142,7 @@ public class Main {
                 logger.info("Hazelcast network config: " +
                         hazelcastConfig.getNetworkConfig().toString());
 
-                options.setMetricsOptions(new DropwizardMetricsOptions()
-                        .setEnabled(true)
-                        .setJmxEnabled(true)
-                );
+
                 Vertx.clusteredVertx(options, res -> {
                     if (res.succeeded()) {
                         Vertx vertx = res.result();
@@ -163,10 +159,7 @@ public class Main {
             }
         } else {
             VertxOptions options = new VertxOptions();
-            options.setMetricsOptions(new DropwizardMetricsOptions()
-                    .setEnabled(true)
-                    .setJmxEnabled(true)
-            );
+
 
             Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(MQTTBroker.class.getName(), deploymentOptions);

@@ -115,6 +115,23 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         return willMessage;
     }
 
+    /*
+     * 1. CURRENT WITH JWT
+     * clientID: <random uuid>
+     * user: <username>@<tenant>
+     * pass: <jwt>
+     *
+     * 2. OLD WITH JWT
+     * clientID: <random uuid>@<tenant>
+     * user: <jwt>
+     * pass: <unused refresh token>
+     *
+     * 3. PLAIN (OLD == NEW)
+     * clientID: <random uuid>
+     * user: <username>@<tenant>
+     * pass: <password>
+     *
+     */
     public void handleConnectMessage(ConnectMessage connectMessage,
                                      Handler<Boolean> authHandler)
             throws Exception {
@@ -129,33 +146,11 @@ public class MQTTSession implements Handler<Message<Buffer>> {
         // init tenant
         tenant = TenantUtils.extractTenant(username);
         username = TenantUtils.removeTenant(username);
-
-        logger.info(String.format("  Tenant: %s",tenant));
-        logger.info(String.format("Username: %s",username));
-
-        if(tenant == null || tenant.trim().length()==0) {
-            // try to extract from JWT
-            try {
-                String jwt = username;
-
-                JWT jwtParser = new JWT();
-                JWK jwk = new JWK("RS256", System.getenv("JWT_PUB_KEY"), null);
-                jwtParser.addJWK(jwk);
-                JsonObject jwtJsonObj = jwtParser.decode(jwt);
-                String jwtUsername = jwtJsonObj.getString("preferred_username", null);
-
-                // init tenant
-                tenant = TenantUtils.extractTenant(jwtUsername);
-                username = TenantUtils.removeTenant(jwtUsername);
-
-                logger.info(String.format("  Tenant from JWT: %s", tenant));
-                logger.info(String.format("Username from JWT: %s", username));
-
-                password = jwt;
-            } catch (Throwable e) {
-                logger.warn("Extracting tenant from JWT: "+ e.getMessage());
-            }
+        if(tenant == null) {
+            // try clientID as fallback of username
+            tenant = TenantUtils.extractTenant(clientID);
         }
+        logger.info(String.format("Tenant: %s, Username: %s, ClientID: %s",tenant, username, clientID));
 
         if(tenant == null)
             throw new IllegalStateException("Tenant cannot be empty or null");

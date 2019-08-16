@@ -1,5 +1,9 @@
 # v 2.5.2
 - Handled exceltion on websocket closed due to keeplive time exausted.
+- Removed dropwizard metrics
+- Upgraded Vert.x to v3.8.0 
+- pom.xml: removed unused dependencies and general simplification
+
 
 # v 2.5.1
 - Slim down docker image

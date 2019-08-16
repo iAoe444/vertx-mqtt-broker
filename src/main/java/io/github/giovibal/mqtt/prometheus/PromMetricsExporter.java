@@ -20,6 +20,6 @@ public class PromMetricsExporter extends AbstractVerticle {
 
         Router router = Router.router(vertx);
         router.route(path).handler(new MetricsHandler());
-        vertx.createHttpServer().requestHandler(router::accept).listen(httpPort);
+        vertx.createHttpServer().requestHandler(router::handle).listen(httpPort);
     }
 }

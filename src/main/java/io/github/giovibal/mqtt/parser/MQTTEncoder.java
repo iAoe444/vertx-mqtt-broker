@@ -40,7 +40,7 @@ public class MQTTEncoder {
         return Buffer.buffer(bb);
     }
 
-    private void encode(AbstractMessage msg, ByteBuf bb) throws Exception {
+    private void encode(AbstractMessage msg, ByteBuf bb) {
         DemuxEncoder encoder = m_encoderMap.get(msg.getMessageType());
         if (encoder == null) {
             throw new CorruptedFrameException("Can't find any suitable decoder for message type: " + msg.getMessageType());

@@ -47,7 +47,7 @@ public class MQTTJson {
     public JsonObject serializeWillMessage(String willMsg, byte willQos, String willTopic) {
         JsonObject wm = new JsonObject()
                 .put("topicName", willTopic)
-                .put("qos", new Integer(willQos))
+                .put("qos", Integer.valueOf(willQos))
                 .put("message", willMsg);
         return wm;
     }

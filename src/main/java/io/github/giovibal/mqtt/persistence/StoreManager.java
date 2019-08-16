@@ -71,7 +71,7 @@ public class StoreManager {
                 .put("topicFilter", topicFilter)
                 .put("tenant", tenant)
                 ;
-        vertx.eventBus().send(
+        vertx.eventBus().request(
                 StoreVerticle.ADDRESS,
                 request,
                 new DeliveryOptions().addHeader("command", "getRetainedMessagesByTopicFilter"),
